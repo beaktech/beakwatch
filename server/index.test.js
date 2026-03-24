@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // We test the Express app in isolation by mocking the proxy middleware
 vi.mock('http-proxy-middleware', () => ({
   createProxyMiddleware: () => (req, res, next) => {
-    if (req.url.startsWith('/api/')) {
+    if (req.url.startsWith('/api')) {
       res.json({ proxied: true, url: req.url })
     } else {
       next()
