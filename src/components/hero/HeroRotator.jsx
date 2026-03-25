@@ -20,7 +20,7 @@ function isRecentActivityStale(detections) {
   return Date.now() - latest > NO_ACTIVITY_WINDOW
 }
 
-export default function HeroRotator({ detections, todayStats, history, lastSuccessAt }) {
+export default function HeroRotator({ detections, todayStats, weeklyActivity = [], history, lastSuccessAt }) {
   const [slideIndex, setSlideIndex] = useState(0)
   const [visible, setVisible] = useState(true)
 
@@ -32,8 +32,8 @@ export default function HeroRotator({ detections, todayStats, history, lastSucce
   const slides = [
     { key: 'last', hasData: detections.length > 0 && !recentStale && !isNetworkStale(lastSuccessAt) },
     { key: 'profile', hasData: detections.length > 0 },
-    { key: 'today', hasData: todayStats.length > 0 },
-    { key: 'resting', hasData: todayStats.length === 0 },
+    { key: 'today', hasData: weeklyActivity.length > 0 },
+    { key: 'resting', hasData: weeklyActivity.length === 0 },
     { key: 'top30', hasData: (history?.top30Days?.length ?? 0) > 0 },
     { key: 'rare', hasData: (history?.rareVisitors?.length ?? 0) > 0 },
   ].filter(s => s.hasData).map(s => s.key)
@@ -73,7 +73,7 @@ export default function HeroRotator({ detections, todayStats, history, lastSucce
         />
       )}
       {currentSlide === 'profile' && <BirdProfile detection={detections[0]} todayStats={todayStats} />}
-      {currentSlide === 'today' && <DailyTopBirds todayStats={todayStats} />}
+      {currentSlide === 'today' && <DailyTopBirds weeklyActivity={weeklyActivity} />}
       {currentSlide === 'resting' && <NoActivity />}
       {currentSlide === 'top30' && <Top30Days species={history.top30Days} />}
       {currentSlide === 'rare' && <RareVisitors species={history.rareVisitors} />}

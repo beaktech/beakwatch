@@ -17,6 +17,7 @@ const recentWithActivity = [
 const props = {
   detections: recentWithActivity,
   todayStats: [{ commonName: 'Wren', hour: 8, count: 5 }],
+  weeklyActivity: [{ commonName: 'Wren', hour: 8, count: 35 }],
   history: { top30Days: [{ commonName: 'Wren', count: 100 }], rareVisitors: [{ commonName: 'Hawfinch', allTimeCount: 1 }] },
   lastSuccessAt: Date.now(),
 }
@@ -55,6 +56,7 @@ describe('HeroRotator', () => {
     render(<HeroRotator
       detections={[]}
       todayStats={[]}
+      weeklyActivity={[]}
       history={{ top30Days: [], rareVisitors: [] }}
       lastSuccessAt={Date.now()}
     />)

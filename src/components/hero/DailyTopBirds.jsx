@@ -39,13 +39,13 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-export default function DailyTopBirds({ todayStats }) {
+export default function DailyTopBirds({ weeklyActivity }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
 
   const top10 = useMemo(() => {
     const bySpecies = {}
-    for (const d of todayStats) {
+    for (const d of weeklyActivity) {
       if (!bySpecies[d.commonName]) bySpecies[d.commonName] = {}
       bySpecies[d.commonName][d.hour] = (bySpecies[d.commonName][d.hour] ?? 0) + d.count
     }
@@ -53,12 +53,13 @@ export default function DailyTopBirds({ todayStats }) {
       .map(([name, hours]) => ({ name, hours, total: Object.values(hours).reduce((a, b) => a + b, 0) }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10)
-  }, [todayStats])
+  }, [weeklyActivity])
 
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container || top10.length === 0) return
+
 
     const draw = () => {
       const W = container.offsetWidth
@@ -116,7 +117,7 @@ export default function DailyTopBirds({ todayStats }) {
       ctx.fillStyle = '#94a3b8'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'top'
-      ;[0, 6, 12, 18, 23].forEach(h => {
+      ;[0, 3, 6, 9, 12, 15, 18, 21].forEach(h => {
         const x = LABEL_W + h * (cellW + CELL_GAP) + cellW / 2
         ctx.fillText(`${h}:00`, x, labelY)
       })
@@ -130,13 +131,13 @@ export default function DailyTopBirds({ todayStats }) {
       cancelAnimationFrame(rafId)
       observer?.disconnect()
     }
-  }, [todayStats])
+  }, [top10])
 
   return (
     <div ref={containerRef} className="h-full flex flex-col p-8 bg-white overflow-auto">
-      <h2 className="text-2xl font-bold text-slate-800 mb-1">Most Active Today</h2>
+      <h2 className="text-2xl font-bold text-slate-800 mb-1">Activity Patterns</h2>
       <p className="text-sm text-slate-400 mb-6">
-        Detection frequency by hour · <span className="text-amber-500 font-medium">current hour highlighted</span>
+        Detection frequency by hour · last 7 days · <span className="text-amber-500 font-medium">current hour highlighted</span>
       </p>
       <canvas ref={canvasRef} className="block" />
     </div>

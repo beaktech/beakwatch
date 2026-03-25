@@ -69,6 +69,22 @@ describe('Express server', () => {
     expect(res.body.rareVisitors[0]).toEqual({ commonName: 'Hawfinch', allTimeCount: 1 })
   })
 
+  it('GET /api/weekly sums hourly counts across 7 previous days', async () => {
+    const hourly = Array(24).fill(0)
+    hourly[8] = 4
+    hourly[9] = 6
+    // All 7 days return the same data; counts should be summed
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ common_name: 'Redwing', hourly_counts: hourly }],
+    })
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/api/weekly')
+    expect(res.status).toBe(200)
+    expect(res.body).toContainEqual({ commonName: 'Redwing', hour: 8, count: 28 }) // 4 × 7
+    expect(res.body).toContainEqual({ commonName: 'Redwing', hour: 9, count: 42 }) // 6 × 7
+  })
+
   it('GET /api/recent returns 502 when BirdNET-Go is unreachable', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
     const { default: app } = await import('./index.js')

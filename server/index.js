@@ -84,6 +84,35 @@ app.get('/api/today', async (req, res) => {
   }
 })
 
+// GET /api/weekly — hourly detection counts summed across the previous 7 complete days
+app.get('/api/weekly', async (req, res) => {
+  try {
+    const days = Array.from({ length: 7 }, (_, i) => daysAgoStr(i + 1))
+    const results = await Promise.all(
+      days.map(date => birdnetFetch(`/api/v2/analytics/species/daily?date=${date}`).catch(() => []))
+    )
+    const hourCounts = {}
+    for (const dayData of results) {
+      for (const species of dayData) {
+        const name = species.common_name
+        if (!hourCounts[name]) hourCounts[name] = {}
+        species.hourly_counts.forEach((count, hour) => {
+          if (count > 0) hourCounts[name][hour] = (hourCounts[name][hour] ?? 0) + count
+        })
+      }
+    }
+    const flat = []
+    for (const [commonName, hours] of Object.entries(hourCounts)) {
+      for (const [hour, count] of Object.entries(hours)) {
+        flat.push({ commonName, hour: Number(hour), count })
+      }
+    }
+    res.json(flat)
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
 // GET /api/debug/today — raw BirdNET-Go response for diagnosing field names
 app.get('/api/debug/today', async (req, res) => {
   try {

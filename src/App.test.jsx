@@ -13,6 +13,9 @@ vi.mock('./hooks/useDetections.js', () => ({
 vi.mock('./hooks/useTodayStats.js', () => ({
   useTodayStats: () => ({ todayStats: [{ commonName: 'Eurasian Wren', hour: 8, count: 5 }] }),
 }))
+vi.mock('./hooks/useWeeklyActivity.js', () => ({
+  useWeeklyActivity: () => ({ weeklyActivity: [{ commonName: 'Eurasian Wren', hour: 8, count: 35 }] }),
+}))
 vi.mock('./hooks/useHistory.js', () => ({
   useHistory: () => ({
     history: {
