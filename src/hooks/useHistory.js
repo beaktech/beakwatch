@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { usePolling } from './usePolling.js'
 
 async function fetchHistory() {
@@ -8,6 +7,6 @@ async function fetchHistory() {
 }
 
 export function useHistory() {
-  const { data } = usePolling(useCallback(fetchHistory, []), 5 * 60_000)
+  const { data } = usePolling(fetchHistory, 5 * 60_000)
   return { history: data ?? null }
 }

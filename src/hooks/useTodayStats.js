@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { usePolling } from './usePolling.js'
 
 async function fetchToday() {
@@ -8,6 +7,6 @@ async function fetchToday() {
 }
 
 export function useTodayStats() {
-  const { data } = usePolling(useCallback(fetchToday, []), 60_000)
+  const { data } = usePolling(fetchToday, 60_000)
   return { todayStats: data ?? [] }
 }

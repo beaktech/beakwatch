@@ -4,8 +4,9 @@
   html, body, #root {
     height: 100%;
     margin: 0;
-    background-color: #1a3a1a;
-    color: white;
+    background-color: #f8fafc;
+    color: #1e293b;
     font-family: Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }

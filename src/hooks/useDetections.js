@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { usePolling } from './usePolling.js'
 
 async function fetchRecent() {
@@ -8,6 +7,6 @@ async function fetchRecent() {
 }
 
 export function useDetections() {
-  const { data, lastSuccessAt } = usePolling(useCallback(fetchRecent, []), 15_000)
+  const { data, lastSuccessAt } = usePolling(fetchRecent, 15_000)
   return { detections: data ?? [], lastSuccessAt }
 }

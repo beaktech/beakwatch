@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n vite,server -c cyan,green \"vite\" \"nodemon --watch server server/index.js\"",
     "build": "vite build",
     "start": "node server/index.js",
+    "download-images": "node scripts/download-bird-images.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -15,7 +16,6 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "http-proxy-middleware": "^3.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "vite": "^8.0.2"
@@ -26,7 +26,9 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^4.1.1",
+    "concurrently": "^9.2.1",
     "jsdom": "^29.0.1",
+    "nodemon": "^3.1.14",
     "supertest": "^7.2.2",
     "tailwindcss": "^4.2.2",
     "vitest": "^4.1.1"
