@@ -5,12 +5,12 @@ export default function Top30Days({ species }) {
 
   return (
     <div className="h-full flex flex-col p-8 bg-white overflow-auto">
-      <h2 className="text-2xl font-bold text-slate-800 mb-1">Top Species</h2>
+      <h2 className="text-2xl font-bold text-slate-800 mb-1">Most Popular Species</h2>
       <p className="text-sm text-slate-400 mb-6">Last 30 days</p>
       <div className="space-y-3">
         {species.slice(0, 10).map((s, i) => (
           <div key={s.commonName} className="flex items-center gap-4">
-            <span className="text-sm font-bold text-emerald-600 w-5 text-right flex-shrink-0">
+            <span className="text-sm font-bold text-[#5c9430] w-5 text-right flex-shrink-0">
               {i + 1}
             </span>
             <BirdImage
@@ -25,7 +25,7 @@ export default function Top30Days({ species }) {
               </div>
               <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-500 rounded-full"
+                  className="h-full bg-[#5c9430] rounded-full"
                   style={{ width: `${(s.count / max) * 100}%` }}
                 />
               </div>

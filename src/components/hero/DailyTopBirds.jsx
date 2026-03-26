@@ -1,17 +1,22 @@
 import { useRef, useEffect, useMemo } from 'react'
+import { fetchWikipedia } from '../../utils/wikipedia.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
-const CELL_H = 28
+const CELL_H = 32
 const CELL_GAP = 4
-const LABEL_W = 150
-const CELL_RADIUS = 4
+const MAX_CELL_W = 18
+const THUMB_SIZE = 28
+const THUMB_GAP = 8
+const LABEL_W = 170
+const CELL_RADIUS = 5
+const HEADER_H = 28
 
-// Green gradient: empty → light → mid → dark (matching reference's contribution-graph style)
+// Grass green gradient: empty → light → mid → dark
 const COLOR_STOPS = [
-  [209, 250, 229], // emerald-100 #d1fae5
-  [52, 211, 153],  // emerald-400 #34d399
-  [5, 150, 105],   // emerald-600 #059669
-  [4, 120, 87],    // emerald-700 #047857
+  [220, 237, 200], // light grass
+  [144, 196, 99],  // mid grass
+  [92, 148, 46],   // deeper grass
+  [54, 101, 23],   // deep grass
 ]
 
 function getColor(intensity) {
@@ -39,9 +44,21 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
+function toSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/[\s-]+/g, '-')
+}
+
+function hourLabel(h) {
+  if (h === 0) return '12am'
+  if (h < 12) return `${h}am`
+  if (h === 12) return '12pm'
+  return `${h - 12}pm`
+}
+
 export default function DailyTopBirds({ weeklyActivity }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
+
 
   const top10 = useMemo(() => {
     const bySpecies = {}
@@ -52,7 +69,7 @@ export default function DailyTopBirds({ weeklyActivity }) {
     return Object.entries(bySpecies)
       .map(([name, hours]) => ({ name, hours, total: Object.values(hours).reduce((a, b) => a + b, 0) }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 10)
+      .slice(0, 15)
   }, [weeklyActivity])
 
   useEffect(() => {
@@ -60,15 +77,33 @@ export default function DailyTopBirds({ weeklyActivity }) {
     const container = containerRef.current
     if (!canvas || !container || top10.length === 0) return
 
+    // Preload thumbnails with Wikipedia fallback
+    const images = {}
+    top10.forEach(({ name }) => {
+      const img = new Image()
+      img.src = `/birds/${toSlug(name)}.jpg`
+      images[name] = img
+      img.onload = draw
+      img.onerror = () => {
+        fetchWikipedia(name).then(({ photoUrl }) => {
+          if (photoUrl) {
+            img.src = photoUrl
+          } else {
+            img._failed = true
+            draw()
+          }
+        })
+      }
+    })
 
-    const draw = () => {
-      const W = container.offsetWidth
+    function draw() {
+      const W = container.offsetWidth - 64 // subtract p-8 padding (32px each side)
       if (!W) return
 
       const dpr = window.devicePixelRatio || 1
       const currentHour = new Date().getHours()
       const cellW = Math.floor((W - LABEL_W - CELL_GAP * 23) / 24)
-      const totalH = top10.length * (CELL_H + CELL_GAP) + 28 // 28px for hour labels
+      const totalH = HEADER_H + top10.length * (CELL_H + CELL_GAP) - CELL_GAP
 
       canvas.width = W * dpr
       canvas.height = totalH * dpr
@@ -80,50 +115,82 @@ export default function DailyTopBirds({ weeklyActivity }) {
       ctx.scale(dpr, dpr)
       ctx.clearRect(0, 0, W, totalH)
 
+      // Hour header labels
+      ctx.font = '11px Inter, system-ui, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      HOURS.forEach(h => {
+        if (h % 3 === 0) {
+          const x = LABEL_W + h * (cellW + CELL_GAP) + cellW / 2
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillText(hourLabel(h), x, HEADER_H / 2 - 5)
+        }
+      })
+
+      // "Now" arrow for current hour
+      const arrowX = LABEL_W + currentHour * (cellW + CELL_GAP) + cellW / 2
+      const arrowSize = 8
+      const arrowY = HEADER_H - arrowSize - 1
+      ctx.fillStyle = '#f59e0b'
+      ctx.beginPath()
+      ctx.moveTo(arrowX, arrowY + arrowSize)
+      ctx.lineTo(arrowX - arrowSize, arrowY)
+      ctx.lineTo(arrowX + arrowSize, arrowY)
+      ctx.closePath()
+      ctx.fill()
+
       top10.forEach(({ name, hours }, row) => {
-        const y = row * (CELL_H + CELL_GAP)
+        const y = HEADER_H + row * (CELL_H + CELL_GAP)
         const maxForRow = Math.max(1, ...Object.values(hours))
+
+        // Circular thumbnail
+        const img = images[name]
+        const thumbX = 0
+        const thumbY = y + (CELL_H - THUMB_SIZE) / 2
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(thumbX + THUMB_SIZE / 2, thumbY + THUMB_SIZE / 2, THUMB_SIZE / 2, 0, Math.PI * 2)
+        ctx.closePath()
+        if (img?.complete && img.naturalWidth > 0 && !img._failed) {
+          ctx.clip()
+          ctx.drawImage(img, thumbX, thumbY, THUMB_SIZE, THUMB_SIZE)
+        } else {
+          ctx.fillStyle = '#e2e8f0'
+          ctx.fill()
+        }
+        ctx.restore()
 
         // Species label
         ctx.font = '500 12px Inter, system-ui, sans-serif'
-        ctx.fillStyle = '#64748b'
-        ctx.textAlign = 'right'
+        ctx.fillStyle = '#475569'
+        ctx.textAlign = 'left'
         ctx.textBaseline = 'middle'
-        const label = name.length > 20 ? name.slice(0, 19) + '…' : name
-        ctx.fillText(label, LABEL_W - 10, y + CELL_H / 2)
+        const label = name.length > 18 ? name.slice(0, 17) + '…' : name
+        ctx.fillText(label, THUMB_SIZE + THUMB_GAP, y + CELL_H / 2)
 
-        // 24 cells
+        // 24 hour cells
         HOURS.forEach(h => {
           const count = hours[h] ?? 0
           const x = LABEL_W + h * (cellW + CELL_GAP)
+          const intensity = count / maxForRow
 
           roundRect(ctx, x, y, cellW, CELL_H, CELL_RADIUS)
-          ctx.fillStyle = getColor(count / maxForRow)
+          ctx.fillStyle = getColor(intensity)
           ctx.fill()
 
-          // Current hour: amber outline
-          if (h === currentHour) {
-            roundRect(ctx, x - 1, y - 1, cellW + 2, CELL_H + 2, CELL_RADIUS + 1)
-            ctx.strokeStyle = '#f59e0b'
-            ctx.lineWidth = 1.5
-            ctx.stroke()
+          // Count label inside cell
+          if (count > 0 && cellW >= 18) {
+            ctx.font = `bold ${cellW >= 26 ? 10 : 8}px Inter, system-ui, sans-serif`
+            ctx.fillStyle = intensity > 0.55 ? 'rgba(255,255,255,0.92)' : '#3a6b14'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(count > 99 ? '99+' : String(count), x + cellW / 2, y + CELL_H / 2)
           }
-        })
-      })
 
-      // Hour axis labels
-      const labelY = top10.length * (CELL_H + CELL_GAP) + 6
-      ctx.font = '11px Inter, system-ui, sans-serif'
-      ctx.fillStyle = '#94a3b8'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-      ;[0, 3, 6, 9, 12, 15, 18, 21].forEach(h => {
-        const x = LABEL_W + h * (cellW + CELL_GAP) + cellW / 2
-        ctx.fillText(`${h}:00`, x, labelY)
+        })
       })
     }
 
-    // Wrap in rAF so offsetWidth is available after first layout paint
     let rafId = requestAnimationFrame(draw)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(draw) : null
     observer?.observe(container)
@@ -137,7 +204,7 @@ export default function DailyTopBirds({ weeklyActivity }) {
     <div ref={containerRef} className="h-full flex flex-col p-8 bg-white overflow-auto">
       <h2 className="text-2xl font-bold text-slate-800 mb-1">Activity Patterns</h2>
       <p className="text-sm text-slate-400 mb-6">
-        Detection frequency by hour · last 7 days · <span className="text-amber-500 font-medium">current hour highlighted</span>
+        Detection frequency by hour · today · <span className="text-amber-500 font-medium">▼ now</span>
       </p>
       <canvas ref={canvasRef} className="block" />
     </div>

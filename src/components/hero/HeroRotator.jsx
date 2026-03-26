@@ -6,7 +6,7 @@ import Top30Days from './Top30Days.jsx'
 import RareVisitors from './RareVisitors.jsx'
 import NoActivity from './NoActivity.jsx'
 
-const SLIDE_INTERVAL = 5_000
+const SLIDE_INTERVAL = 20_000
 const NO_ACTIVITY_WINDOW = 30 * 60_000
 const STALE_THRESHOLD = 5 * 60_000
 
@@ -23,6 +23,8 @@ function isRecentActivityStale(detections) {
 export default function HeroRotator({ detections, todayStats, weeklyActivity = [], history, lastSuccessAt }) {
   const [slideIndex, setSlideIndex] = useState(0)
   const [visible, setVisible] = useState(true)
+  const intervalRef = useRef(null)
+  const tidRef = useRef(null)
 
   const recentStale = isRecentActivityStale(detections)
   const isSpotlight =
@@ -41,17 +43,29 @@ export default function HeroRotator({ detections, todayStats, weeklyActivity = [
   const availableRef = useRef(slides)
   availableRef.current = slides
 
+  function advance() {
+    setVisible(false)
+    tidRef.current = setTimeout(() => {
+      setSlideIndex(i => (i + 1) % (availableRef.current.length || 1))
+      setVisible(true)
+    }, 500)
+  }
+
+  function startInterval() {
+    clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(advance, SLIDE_INTERVAL)
+  }
+
   useEffect(() => {
-    let tid
-    const id = setInterval(() => {
-      setVisible(false)
-      tid = setTimeout(() => {
-        setSlideIndex(i => (i + 1) % (availableRef.current.length || 1))
-        setVisible(true)
-      }, 500)
-    }, SLIDE_INTERVAL)
-    return () => { clearInterval(id); clearTimeout(tid) }
+    startInterval()
+    return () => { clearInterval(intervalRef.current); clearTimeout(tidRef.current) }
   }, [])
+
+  function handleClick() {
+    clearTimeout(tidRef.current)
+    advance()
+    startInterval()
+  }
 
   if (slides.length === 0) return <NoActivity />
 
@@ -62,8 +76,9 @@ export default function HeroRotator({ detections, todayStats, weeklyActivity = [
 
   return (
     <div
-      className="h-full transition-opacity duration-500"
+      className="h-full transition-opacity duration-500 cursor-pointer"
       style={{ opacity: visible ? 1 : 0 }}
+      onClick={handleClick}
     >
       {currentSlide === 'last' && (
         <LastIdentified

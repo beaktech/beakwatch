@@ -7,8 +7,16 @@ dotenv.config({ path: new URL('.env', import.meta.url).pathname })
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express()
-const BIRDNET_GO_URL = process.env.BIRDNET_GO_URL || 'http://localhost:8080'
+app.use(express.json())
 const PORT = process.env.PORT || 3000
+const LAT = process.env.LAT || '54.46'
+const LON = process.env.LON || '-3.08'
+
+const SERVERS = [
+  process.env.BIRDNET_GO_URL || 'http://10.147.20.4:8080',
+  process.env.BIRDNET_GO_URL_2 || 'http://10.147.20.2',
+]
+let activeServerUrl = SERVERS[0]
 
 function localDateStr(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -25,10 +33,23 @@ function daysAgoStr(n) {
 }
 
 async function birdnetFetch(path) {
-  const res = await fetch(`${BIRDNET_GO_URL}${path}`)
+  const res = await fetch(`${activeServerUrl}${path}`)
   if (!res.ok) throw new Error(`BirdNET-Go ${res.status}: ${path}`)
   return res.json()
 }
+
+// GET /api/server — current active server + all options
+app.get('/api/server', (req, res) => {
+  res.json({ active: activeServerUrl, servers: SERVERS })
+})
+
+// POST /api/server — switch active server { url }
+app.post('/api/server', (req, res) => {
+  const { url } = req.body
+  if (!SERVERS.includes(url)) return res.status(400).json({ error: 'Unknown server' })
+  activeServerUrl = url
+  res.json({ active: activeServerUrl })
+})
 
 // GET /api/recent — last 20 detections, newest first
 // BirdNET-Go: GET /api/v2/detections/recent?limit=20
@@ -48,10 +69,11 @@ app.get('/api/recent', async (req, res) => {
 })
 
 // GET /api/today — flat [{commonName, hour, count}] for today's heatmap
+// Accepts optional ?date=YYYY-MM-DD to fetch a specific day (for testing)
 // Tries analytics/daily first; falls back to aggregating live detections if empty
 app.get('/api/today', async (req, res) => {
   try {
-    const today = todayStr()
+    const today = req.query.date || todayStr()
     const daily = await birdnetFetch(`/api/v2/analytics/species/daily?date=${today}`)
     if (Array.isArray(daily) && daily.length > 0) {
       const flat = []
@@ -128,9 +150,9 @@ app.get('/api/debug/today', async (req, res) => {
 app.get('/api/history', async (req, res) => {
   try {
     const [summary30, allTime, newSpecies] = await Promise.all([
-      birdnetFetch(`/api/v2/analytics/species/summary?start_date=${daysAgoStr(30)}&end_date=${todayStr()}`),
-      birdnetFetch(`/api/v2/analytics/species/summary?start_date=2010-01-01&end_date=${todayStr()}`),
-      birdnetFetch(`/api/v2/analytics/species/detections/new?start_date=${daysAgoStr(7)}&end_date=${todayStr()}`),
+      birdnetFetch(`/api/v2/analytics/species/summary?start_date=${daysAgoStr(30)}&end_date=${todayStr()}`).catch(() => []),
+      birdnetFetch(`/api/v2/analytics/species/summary?start_date=2010-01-01&end_date=${todayStr()}`).catch(() => []),
+      birdnetFetch(`/api/v2/analytics/species/detections/new?start_date=${daysAgoStr(7)}&end_date=${todayStr()}`).catch(() => []),
     ])
 
     const top30Days = [...summary30]
@@ -149,6 +171,36 @@ app.get('/api/history', async (req, res) => {
       speciesLast30Days: summary30.length,
       speciesAllTime: allTime.length,
       newThisWeek: newSpecies.length,
+    })
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// GET /api/weather — current conditions from Open-Meteo
+const WMO_LABELS = {
+  0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+  45: 'Foggy', 48: 'Icy fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+  61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+  80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 95: 'Thunderstorm',
+}
+const WMO_EMOJI = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️', 51: '🌦️', 53: '🌦️', 55: '🌧️',
+  61: '🌦️', 63: '🌧️', 65: '🌧️', 71: '🌨️', 73: '❄️', 75: '❄️',
+  80: '🌦️', 81: '🌧️', 82: '⛈️', 95: '⛈️',
+}
+app.get('/api/weather', async (req, res) => {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code,wind_speed_10m&wind_speed_unit=mph&temperature_unit=celsius&timezone=Europe%2FLondon`
+    const data = await fetch(url).then(r => r.json())
+    const { temperature_2m: temp, weather_code: code, wind_speed_10m: wind } = data.current
+    res.json({
+      temp: Math.round(temp),
+      wind: Math.round(wind),
+      code,
+      label: WMO_LABELS[code] ?? 'Unknown',
+      emoji: WMO_EMOJI[code] ?? '🌡️',
     })
   } catch (err) {
     res.status(502).json({ error: err.message })

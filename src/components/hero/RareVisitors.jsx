@@ -5,7 +5,7 @@ export default function RareVisitors({ species }) {
     <div className="h-full flex flex-col p-8 bg-white">
       <h2 className="text-2xl font-bold text-slate-800 mb-1">Rare Visitors</h2>
       <p className="text-sm text-slate-400 mb-5">Least frequently seen at this sanctuary</p>
-      <div className="grid grid-cols-3 grid-rows-2 gap-3 flex-1 min-h-0">
+      <div className="grid grid-cols-3 grid-rows-2 gap-7 flex-1 min-h-0 max-h-[80%]">
         {species.slice(0, 6).map((s, i) => (
           <div key={s.commonName} className="relative rounded-2xl overflow-hidden bg-slate-900">
             <BirdImage

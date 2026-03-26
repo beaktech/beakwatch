@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import BirdImage from '../BirdImage.jsx'
 import { fetchWikipedia } from '../../utils/wikipedia.js'
+import { timeAgo } from '../../utils/formatters.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
@@ -41,6 +42,11 @@ export default function BirdProfile({ detection, todayStats }) {
             Species Profile
           </span>
         </div>
+        <div className="absolute top-6 right-6">
+          <span className="bg-black/30 backdrop-blur-sm text-white/70 text-xs px-3 py-1.5 rounded-full border border-white/20">
+            Detected {timeAgo(detection.timestamp)}
+          </span>
+        </div>
         <div className="absolute bottom-0 left-0 right-0 px-7 pb-7">
           <h2 className="text-4xl font-bold text-white leading-tight tracking-tight">
             {detection.commonName}
@@ -55,9 +61,13 @@ export default function BirdProfile({ detection, todayStats }) {
       <div className="flex-1 flex flex-col px-8 py-8 overflow-hidden gap-6">
 
         {/* Wikipedia extract */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden flex items-center">
           {extract ? (
-            <p className="text-slate-600 text-base leading-relaxed line-clamp-6">{extract}</p>
+            <div className="space-y-3">
+              {extract.match(/[^.!?]+[.!?]+/g)?.map((sentence, i) => (
+                <p key={i} className="text-slate-600 text-lg leading-relaxed">{sentence.trim()}</p>
+              )) ?? <p className="text-slate-600 text-lg leading-relaxed">{extract}</p>}
+            </div>
           ) : (
             <div className="space-y-2.5">
               {[100, 90, 95, 80].map(w => (
