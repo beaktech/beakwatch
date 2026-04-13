@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import BirdImage from '../BirdImage.jsx'
+import Attribution from '../Attribution.jsx'
 import { fetchWikipedia } from '../../utils/wikipedia.js'
 import { timeAgo } from '../../utils/formatters.js'
 
@@ -36,6 +37,7 @@ export default function BirdProfile({ detection, todayStats }) {
           alt={detection.commonName}
           className="absolute inset-0 w-full h-full object-contain"
         />
+        <Attribution commonName={detection.commonName} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute top-6 left-6">
           <span className="bg-black/30 backdrop-blur-sm text-white/90 text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border border-white/20">
@@ -65,8 +67,8 @@ export default function BirdProfile({ detection, todayStats }) {
           {extract ? (
             <div className="space-y-3">
               {extract.match(/[^.!?]+[.!?]+/g)?.map((sentence, i) => (
-                <p key={i} className="text-slate-600 text-lg leading-relaxed">{sentence.trim()}</p>
-              )) ?? <p className="text-slate-600 text-lg leading-relaxed">{extract}</p>}
+                <p key={i} className="text-lg leading-relaxed font-bold text-[#754580]">{sentence.trim()}</p>
+              )) ?? <p className="text-lg leading-relaxed font-bold text-[#754580]">{extract}</p>}
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -103,21 +105,19 @@ export default function BirdProfile({ detection, todayStats }) {
               {HOURS.map(h => {
                 const isCurrent = h === currentHour
                 const isPeak = h === peakHour
+                const barColor = hourly[h] === 0
+                  ? null
+                  : isPeak ? '#5c9430' : isCurrent ? '#f59e0b' : '#90c45f'
                 return (
-                  <div
-                    key={h}
-                    className="flex-1 rounded-sm transition-all"
-                    style={{
-                      height: `${Math.max(4, (hourly[h] / maxCount) * 100)}%`,
-                      backgroundColor: hourly[h] === 0
-                        ? '#e2e8f0'
-                        : isPeak
-                        ? '#059669'
-                        : isCurrent
-                        ? '#f59e0b'
-                        : '#34d399',
-                    }}
-                  />
+                  <div key={h} className="flex-1 h-full relative">
+                    <div className="absolute inset-0 rounded-sm bg-slate-100" />
+                    {barColor && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 rounded-sm transition-all"
+                        style={{ height: `${Math.max(4, (hourly[h] / maxCount) * 100)}%`, backgroundColor: barColor }}
+                      />
+                    )}
+                  </div>
                 )
               })}
             </div>

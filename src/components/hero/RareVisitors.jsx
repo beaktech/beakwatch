@@ -1,4 +1,5 @@
 import BirdImage from '../BirdImage.jsx'
+import Attribution from '../Attribution.jsx'
 
 export default function RareVisitors({ species }) {
   return (
@@ -13,6 +14,7 @@ export default function RareVisitors({ species }) {
               alt={s.commonName}
               className="absolute inset-0 w-full h-full object-contain"
             />
+            <Attribution commonName={s.commonName} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute top-3 right-3">
               <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-2 py-0.5 rounded-full border border-white/30">

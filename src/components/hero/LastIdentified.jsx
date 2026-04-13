@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import BirdImage from '../BirdImage.jsx'
+import Attribution from '../Attribution.jsx'
 import { fetchWikipedia } from '../../utils/wikipedia.js'
 
 export default function LastIdentified({ detection, isSpotlight, todayCount }) {
@@ -20,6 +21,7 @@ export default function LastIdentified({ detection, isSpotlight, todayCount }) {
         alt={detection.commonName}
         className="absolute inset-0 w-full h-full object-cover"
       />
+      <Attribution commonName={detection.commonName} />
       {/* gradient: transparent top → strong dark bottom */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 

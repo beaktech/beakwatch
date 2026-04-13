@@ -58,6 +58,7 @@ function hourLabel(h) {
 export default function DailyTopBirds({ weeklyActivity }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
+  const canvasWrapperRef = useRef(null)
 
 
   const top10 = useMemo(() => {
@@ -75,7 +76,8 @@ export default function DailyTopBirds({ weeklyActivity }) {
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
-    if (!canvas || !container || top10.length === 0) return
+    const canvasWrapper = canvasWrapperRef.current
+    if (!canvas || !container || !canvasWrapper || top10.length === 0) return
 
     // Preload thumbnails with Wikipedia fallback
     const images = {}
@@ -98,12 +100,17 @@ export default function DailyTopBirds({ weeklyActivity }) {
 
     function draw() {
       const W = container.offsetWidth - 64 // subtract p-8 padding (32px each side)
-      if (!W) return
+      const availH = canvasWrapper.offsetHeight
+      if (!W || !availH) return
+
+      // Shrink cell height to fit available space on smaller screens
+      const cellH = Math.min(CELL_H, Math.floor((availH - HEADER_H + CELL_GAP) / top10.length) - CELL_GAP)
+      const thumbSize = Math.min(THUMB_SIZE, cellH - 4)
 
       const dpr = window.devicePixelRatio || 1
       const currentHour = new Date().getHours()
       const cellW = Math.floor((W - LABEL_W - CELL_GAP * 23) / 24)
-      const totalH = HEADER_H + top10.length * (CELL_H + CELL_GAP) - CELL_GAP
+      const totalH = HEADER_H + top10.length * (cellH + CELL_GAP) - CELL_GAP
 
       canvas.width = W * dpr
       canvas.height = totalH * dpr
@@ -140,20 +147,20 @@ export default function DailyTopBirds({ weeklyActivity }) {
       ctx.fill()
 
       top10.forEach(({ name, hours }, row) => {
-        const y = HEADER_H + row * (CELL_H + CELL_GAP)
+        const y = HEADER_H + row * (cellH + CELL_GAP)
         const maxForRow = Math.max(1, ...Object.values(hours))
 
         // Circular thumbnail
         const img = images[name]
         const thumbX = 0
-        const thumbY = y + (CELL_H - THUMB_SIZE) / 2
+        const thumbY = y + (cellH - thumbSize) / 2
         ctx.save()
         ctx.beginPath()
-        ctx.arc(thumbX + THUMB_SIZE / 2, thumbY + THUMB_SIZE / 2, THUMB_SIZE / 2, 0, Math.PI * 2)
+        ctx.arc(thumbX + thumbSize / 2, thumbY + thumbSize / 2, thumbSize / 2, 0, Math.PI * 2)
         ctx.closePath()
         if (img?.complete && img.naturalWidth > 0 && !img._failed) {
           ctx.clip()
-          ctx.drawImage(img, thumbX, thumbY, THUMB_SIZE, THUMB_SIZE)
+          ctx.drawImage(img, thumbX, thumbY, thumbSize, thumbSize)
         } else {
           ctx.fillStyle = '#e2e8f0'
           ctx.fill()
@@ -166,7 +173,7 @@ export default function DailyTopBirds({ weeklyActivity }) {
         ctx.textAlign = 'left'
         ctx.textBaseline = 'middle'
         const label = name.length > 18 ? name.slice(0, 17) + '…' : name
-        ctx.fillText(label, THUMB_SIZE + THUMB_GAP, y + CELL_H / 2)
+        ctx.fillText(label, thumbSize + THUMB_GAP, y + cellH / 2)
 
         // 24 hour cells
         HOURS.forEach(h => {
@@ -174,19 +181,18 @@ export default function DailyTopBirds({ weeklyActivity }) {
           const x = LABEL_W + h * (cellW + CELL_GAP)
           const intensity = count / maxForRow
 
-          roundRect(ctx, x, y, cellW, CELL_H, CELL_RADIUS)
+          roundRect(ctx, x, y, cellW, cellH, CELL_RADIUS)
           ctx.fillStyle = getColor(intensity)
           ctx.fill()
 
           // Count label inside cell
-          if (count > 0 && cellW >= 18) {
+          if (count > 0 && cellW >= 18 && cellH >= 16) {
             ctx.font = `bold ${cellW >= 26 ? 10 : 8}px Inter, system-ui, sans-serif`
             ctx.fillStyle = intensity > 0.55 ? 'rgba(255,255,255,0.92)' : '#3a6b14'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
-            ctx.fillText(count > 99 ? '99+' : String(count), x + cellW / 2, y + CELL_H / 2)
+            ctx.fillText(count > 99 ? '99+' : String(count), x + cellW / 2, y + cellH / 2)
           }
-
         })
       })
     }
@@ -194,6 +200,7 @@ export default function DailyTopBirds({ weeklyActivity }) {
     let rafId = requestAnimationFrame(draw)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(draw) : null
     observer?.observe(container)
+    observer?.observe(canvasWrapper)
     return () => {
       cancelAnimationFrame(rafId)
       observer?.disconnect()
@@ -201,12 +208,14 @@ export default function DailyTopBirds({ weeklyActivity }) {
   }, [top10])
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col p-8 bg-white overflow-auto">
+    <div ref={containerRef} className="h-full flex flex-col p-8 bg-white overflow-hidden">
       <h2 className="text-2xl font-bold text-slate-800 mb-1">Activity Patterns</h2>
       <p className="text-sm text-slate-400 mb-6">
         Detection frequency by hour · today · <span className="text-amber-500 font-medium">▼ now</span>
       </p>
-      <canvas ref={canvasRef} className="block" />
+      <div ref={canvasWrapperRef} className="flex-1 min-h-0">
+        <canvas ref={canvasRef} className="block" />
+      </div>
     </div>
   )
 }
