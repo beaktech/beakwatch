@@ -19,6 +19,7 @@ export default function LastIdentified({ detection, isSpotlight, todayCount }) {
       <BirdImage
         commonName={detection.commonName}
         alt={detection.commonName}
+        width={1000}
         className="absolute inset-0 w-full h-full object-cover"
       />
       <Attribution commonName={detection.commonName} />

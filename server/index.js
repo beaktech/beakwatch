@@ -2,6 +2,7 @@ import express from 'express'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import dotenv from 'dotenv'
+import { getBirdImage } from './birdImages.js'
 
 dotenv.config({ path: new URL('.env', import.meta.url).pathname })
 
@@ -9,14 +10,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express()
 app.use(express.json())
 const PORT = process.env.PORT || 3000
-const LAT = process.env.LAT || '54.46'
-const LON = process.env.LON || '-3.08'
+const LAT = process.env.LAT || '51.5074'
+const LON = process.env.LON || '-0.1278'
 
-const SERVERS = [
-  process.env.BIRDNET_GO_URL || 'http://10.147.20.4:8080',
-  process.env.BIRDNET_GO_URL_2 || 'http://10.147.20.2',
-]
-let activeServerUrl = SERVERS[0]
+// Configure one or more BirdNET-Go servers via env:
+//   BIRDNET_GO_URLS=http://host1:8080,http://host2:8080
+//   BIRDNET_GO_NAMES=Garden,Office          (optional display names)
+// A single BIRDNET_GO_URL is also accepted for the common case.
+const SERVERS = (() => {
+  const urls = (process.env.BIRDNET_GO_URLS || process.env.BIRDNET_GO_URL || '')
+    .split(',').map(s => s.trim()).filter(Boolean)
+  const names = (process.env.BIRDNET_GO_NAMES || '').split(',').map(s => s.trim())
+  if (urls.length === 0) {
+    console.warn('[server] No BirdNET-Go URL configured. Set BIRDNET_GO_URL in .env')
+  }
+  return urls.map((url, i) => ({ url, name: names[i] || new URL(url).hostname }))
+})()
+let activeServerUrl = SERVERS[0]?.url ?? null
 
 function localDateStr(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -38,7 +48,7 @@ async function birdnetFetch(path) {
   return res.json()
 }
 
-// GET /api/server — current active server + all options
+// GET /api/server — current active server + all options (with names)
 app.get('/api/server', (req, res) => {
   res.json({ active: activeServerUrl, servers: SERVERS })
 })
@@ -46,7 +56,7 @@ app.get('/api/server', (req, res) => {
 // POST /api/server — switch active server { url }
 app.post('/api/server', (req, res) => {
   const { url } = req.body
-  if (!SERVERS.includes(url)) return res.status(400).json({ error: 'Unknown server' })
+  if (!SERVERS.some(s => s.url === url)) return res.status(400).json({ error: 'Unknown server' })
   activeServerUrl = url
   res.json({ active: activeServerUrl })
 })
@@ -56,7 +66,7 @@ app.post('/api/server', (req, res) => {
 // Field notes: camelCase (commonName, scientificName), timestamp is null — combine date+time
 app.get('/api/recent', async (req, res) => {
   try {
-    const data = await birdnetFetch('/api/v2/detections/recent?limit=20')
+    const data = await birdnetFetch('/api/v2/detections/recent?limit=200')
     res.json(data.map(d => ({
       commonName: d.commonName,
       scientificName: d.scientificName,
@@ -204,6 +214,27 @@ app.get('/api/weather', async (req, res) => {
     })
   } catch (err) {
     res.status(502).json({ error: err.message })
+  }
+})
+
+// GET /birds/:filename — disk-cached bird images, fetched from Wikipedia on miss.
+// Expects ?name=<commonName> for the Wikipedia lookup, optional ?w=<width>.
+app.get('/birds/:filename', async (req, res, next) => {
+  const m = req.params.filename.match(/^(.+)\.jpg$/)
+  if (!m) return next()
+  const slug = m[1]
+  const name = req.query.name
+  const width = Math.min(2000, Math.max(1, parseInt(req.query.w, 10) || 320))
+  if (!name) return next()
+
+  try {
+    const buf = await getBirdImage({ slug, name, width })
+    if (!buf) return res.status(404).end()
+    res.set('Content-Type', 'image/jpeg')
+    res.set('Cache-Control', 'public, max-age=31536000, immutable')
+    res.send(buf)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
 })
 

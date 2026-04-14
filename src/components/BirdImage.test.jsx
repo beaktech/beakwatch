@@ -1,40 +1,19 @@
 import { render, screen, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-vi.mock('../utils/wikipedia.js', () => ({
-  fetchWikipedia: vi.fn(),
-}))
-
-import { fetchWikipedia } from '../utils/wikipedia.js'
 import BirdImage from './BirdImage.jsx'
 
 describe('BirdImage', () => {
-  beforeEach(() => {
-    fetchWikipedia.mockResolvedValue({ photoUrl: 'https://example.com/wiki-wren.jpg', extract: null })
-  })
-
-  it('renders a local image src by default', async () => {
-    await act(async () => {
-      render(<BirdImage commonName="Eurasian Wren" alt="Eurasian Wren" />)
-    })
+  it('requests the cached server image with name and width', () => {
+    render(<BirdImage commonName="Eurasian Wren" alt="Eurasian Wren" width={80} />)
     const img = screen.getByRole('img')
-    expect(img.src).toContain('/birds/eurasian-wren')
+    expect(img.src).toContain('/birds/eurasian-wren.jpg')
+    expect(img.src).toContain('name=Eurasian%20Wren')
+    expect(img.src).toMatch(/w=\d+/)
   })
 
-  it('falls back to Wikipedia photo on local image error', async () => {
-    await act(async () => {
-      render(<BirdImage commonName="Eurasian Wren" alt="Eurasian Wren" />)
-    })
-    const img = screen.getByRole('img')
-    await act(async () => { img.dispatchEvent(new Event('error')) })
-    expect(img.src).toBe('https://example.com/wiki-wren.jpg')
-  })
-
-  it('shows placeholder when Wikipedia returns no photo', async () => {
-    fetchWikipedia.mockResolvedValue({ photoUrl: null, extract: null })
-    await act(async () => {
-      render(<BirdImage commonName="Unknown Bird" alt="Unknown Bird" />)
-    })
+  it('falls back to placeholder when the image fails to load', async () => {
+    render(<BirdImage commonName="Unknown Bird" alt="Unknown Bird" />)
     const img = screen.getByRole('img')
     await act(async () => { img.dispatchEvent(new Event('error')) })
     expect(img.src).toContain('placeholder')

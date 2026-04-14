@@ -1,36 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { toSlug } from '../utils/formatters.js'
-import { fetchWikipedia } from '../utils/wikipedia.js'
 
 const PLACEHOLDER = '/birds/placeholder.svg'
 
-export default function BirdImage({ commonName, alt, className = '' }) {
-  const [wikiData, setWikiData] = useState(null)
-  const [usedWiki, setUsedWiki] = useState(false)
+export default function BirdImage({ commonName, alt, className = '', width = 320 }) {
+  const [failed, setFailed] = useState(false)
 
   const slug = toSlug(commonName)
-  const localSrc = `/birds/${slug}.jpg`
-
-  // Eagerly fetch Wikipedia data on mount
-  useEffect(() => {
-    fetchWikipedia(commonName).then(setWikiData)
-  }, [commonName])
-
-  function handleError() {
-    // Local image failed — fall back to wiki photo or placeholder
-    setUsedWiki(true)
-  }
-
-  const src = usedWiki
-    ? (wikiData?.photoUrl ?? PLACEHOLDER)
-    : localSrc
+  const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
+  const targetWidth = Math.round(width * dpr)
+  const src = failed
+    ? PLACEHOLDER
+    : `/birds/${slug}.jpg?name=${encodeURIComponent(commonName)}&w=${targetWidth}`
 
   return (
     <img
       src={src}
       alt={alt}
       className={className}
-      onError={handleError}
+      onError={() => setFailed(true)}
     />
   )
 }

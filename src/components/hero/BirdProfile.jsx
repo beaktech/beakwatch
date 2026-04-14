@@ -35,6 +35,7 @@ export default function BirdProfile({ detection, todayStats }) {
         <BirdImage
           commonName={detection.commonName}
           alt={detection.commonName}
+          width={800}
           className="absolute inset-0 w-full h-full object-contain"
         />
         <Attribution commonName={detection.commonName} />
@@ -67,8 +68,8 @@ export default function BirdProfile({ detection, todayStats }) {
           {extract ? (
             <div className="space-y-3">
               {extract.match(/[^.!?]+[.!?]+/g)?.map((sentence, i) => (
-                <p key={i} className="text-lg leading-relaxed font-bold text-[#754580]">{sentence.trim()}</p>
-              )) ?? <p className="text-lg leading-relaxed font-bold text-[#754580]">{extract}</p>}
+                <p key={i} className="text-lg leading-relaxed font-bold text-black">{sentence.trim()}</p>
+              )) ?? <p className="text-lg leading-relaxed font-bold text-black">{extract}</p>}
             </div>
           ) : (
             <div className="space-y-2.5">

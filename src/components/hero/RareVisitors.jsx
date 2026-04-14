@@ -12,6 +12,7 @@ export default function RareVisitors({ species }) {
             <BirdImage
               commonName={s.commonName}
               alt={s.commonName}
+              width={400}
               className="absolute inset-0 w-full h-full object-contain"
             />
             <Attribution commonName={s.commonName} />

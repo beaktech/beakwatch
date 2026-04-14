@@ -9,11 +9,12 @@ export function useServer() {
 
   async function switchServer() {
     if (!serverInfo) return
-    const next = serverInfo.servers.find(s => s !== serverInfo.active)
+    const next = serverInfo.servers.find(s => s.url !== serverInfo.active)
+    if (!next) return
     await fetch('/api/server', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: next }),
+      body: JSON.stringify({ url: next.url }),
     })
     window.location.reload()
   }
