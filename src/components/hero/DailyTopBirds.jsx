@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react'
-import { fetchWikipedia } from '../../utils/wikipedia.js'
+import { toSlug } from '../../utils/formatters.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 const CELL_H = 32
@@ -44,10 +44,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-function toSlug(name) {
-  return name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/[\s-]+/g, '-')
-}
-
 function hourLabel(h) {
   if (h === 0) return '12am'
   if (h < 12) return `${h}am`
@@ -55,15 +51,14 @@ function hourLabel(h) {
   return `${h - 12}pm`
 }
 
-export default function DailyTopBirds({ weeklyActivity }) {
+export default function DailyTopBirds({ todayStats }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const canvasWrapperRef = useRef(null)
 
-
   const top10 = useMemo(() => {
     const bySpecies = {}
-    for (const d of weeklyActivity) {
+    for (const d of todayStats) {
       if (!bySpecies[d.commonName]) bySpecies[d.commonName] = {}
       bySpecies[d.commonName][d.hour] = (bySpecies[d.commonName][d.hour] ?? 0) + d.count
     }
@@ -71,7 +66,7 @@ export default function DailyTopBirds({ weeklyActivity }) {
       .map(([name, hours]) => ({ name, hours, total: Object.values(hours).reduce((a, b) => a + b, 0) }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 15)
-  }, [weeklyActivity])
+  }, [todayStats])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -79,23 +74,17 @@ export default function DailyTopBirds({ weeklyActivity }) {
     const canvasWrapper = canvasWrapperRef.current
     if (!canvas || !container || !canvasWrapper || top10.length === 0) return
 
-    // Preload thumbnails with Wikipedia fallback
+    // Thumbnails are served by the server image cache (server/birdImages.js) —
+    // missing images are fetched from Wikipedia and cached to disk on first request.
+    const dpr = window.devicePixelRatio || 1
+    const thumbReqWidth = Math.round(THUMB_SIZE * Math.min(dpr, 2))
     const images = {}
     top10.forEach(({ name }) => {
       const img = new Image()
-      img.src = `/birds/${toSlug(name)}.jpg`
+      img.src = `/birds/${toSlug(name)}.jpg?name=${encodeURIComponent(name)}&w=${thumbReqWidth}`
       images[name] = img
       img.onload = draw
-      img.onerror = () => {
-        fetchWikipedia(name).then(({ photoUrl }) => {
-          if (photoUrl) {
-            img.src = photoUrl
-          } else {
-            img._failed = true
-            draw()
-          }
-        })
-      }
+      img.onerror = () => { img._failed = true; draw() }
     })
 
     function draw() {

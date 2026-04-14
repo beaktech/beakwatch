@@ -1,5 +1,6 @@
 import BirdImage from '../BirdImage.jsx'
 import Attribution from '../Attribution.jsx'
+import Badge from '../Badge.jsx'
 
 export default function RareVisitors({ species }) {
   return (
@@ -18,9 +19,7 @@ export default function RareVisitors({ species }) {
             <Attribution commonName={s.commonName} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute top-3 right-3">
-              <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-2 py-0.5 rounded-full border border-white/30">
-                #{i + 1} rarest
-              </span>
+              <Badge variant="light">#{i + 1} rarest</Badge>
             </div>
             <div className="absolute bottom-0 left-0 right-0 p-4">
               <p className="text-white font-bold text-sm leading-tight">{s.commonName}</p>

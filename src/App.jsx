@@ -1,6 +1,5 @@
 import { useDetections } from './hooks/useDetections.js'
 import { useTodayStats } from './hooks/useTodayStats.js'
-import { useWeeklyActivity } from './hooks/useWeeklyActivity.js'
 import { useHistory } from './hooks/useHistory.js'
 import { useWeather } from './hooks/useWeather.js'
 import Sidebar from './components/Sidebar.jsx'
@@ -10,7 +9,6 @@ import HeroRotator from './components/hero/HeroRotator.jsx'
 export default function App() {
   const { detections, lastSuccessAt } = useDetections()
   const { todayStats } = useTodayStats()
-  const { weeklyActivity } = useWeeklyActivity()
   const { history } = useHistory()
   const { weather } = useWeather()
 
@@ -21,7 +19,6 @@ export default function App() {
           <HeroRotator
             detections={detections}
             todayStats={todayStats}
-            weeklyActivity={weeklyActivity}
             history={history}
             lastSuccessAt={lastSuccessAt}
           />

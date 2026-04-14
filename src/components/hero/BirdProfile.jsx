@@ -1,18 +1,14 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import BirdImage from '../BirdImage.jsx'
 import Attribution from '../Attribution.jsx'
-import { fetchWikipedia } from '../../utils/wikipedia.js'
+import Badge from '../Badge.jsx'
+import { useWikipediaExtract } from '../../hooks/useWikipediaExtract.js'
 import { timeAgo } from '../../utils/formatters.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 export default function BirdProfile({ detection, todayStats }) {
-  const [extract, setExtract] = useState(null)
-
-  useEffect(() => {
-    setExtract(null)
-    fetchWikipedia(detection.commonName).then(d => setExtract(d.extract))
-  }, [detection.commonName])
+  const extract = useWikipediaExtract(detection.commonName)
 
   const { hourly, todayTotal, maxCount, peakHour } = useMemo(() => {
     const hourly = Array(24).fill(0)
@@ -41,14 +37,10 @@ export default function BirdProfile({ detection, todayStats }) {
         <Attribution commonName={detection.commonName} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute top-6 left-6">
-          <span className="bg-black/30 backdrop-blur-sm text-white/90 text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border border-white/20">
-            Species Profile
-          </span>
+          <Badge variant="dark">Species Profile</Badge>
         </div>
         <div className="absolute top-6 right-6">
-          <span className="bg-black/30 backdrop-blur-sm text-white/70 text-xs px-3 py-1.5 rounded-full border border-white/20">
-            Detected {timeAgo(detection.timestamp)}
-          </span>
+          <Badge variant="subtle">Detected {timeAgo(detection.timestamp)}</Badge>
         </div>
         <div className="absolute bottom-0 left-0 right-0 px-7 pb-7">
           <h2 className="text-4xl font-bold text-white leading-tight tracking-tight">
@@ -108,7 +100,7 @@ export default function BirdProfile({ detection, todayStats }) {
                 const isPeak = h === peakHour
                 const barColor = hourly[h] === 0
                   ? null
-                  : isPeak ? '#5c9430' : isCurrent ? '#f59e0b' : '#90c45f'
+                  : isPeak ? 'var(--color-brand-green)' : isCurrent ? '#f59e0b' : 'var(--color-brand-green-light)'
                 return (
                   <div key={h} className="flex-1 h-full relative">
                     <div className="absolute inset-0 rounded-sm bg-slate-100" />

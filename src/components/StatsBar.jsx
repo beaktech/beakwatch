@@ -23,7 +23,7 @@ export default function StatsBar({ todayStats, history, weather }) {
         {stats.map(({ label, value }, i) => (
           <div key={label} className="flex items-baseline gap-1.5 px-4">
             {i > 0 && <span className="text-slate-200 absolute -ml-4 select-none">·</span>}
-            <span className="text-xl font-bold text-[#754580]">{value}</span>{' '}
+            <span className="text-xl font-bold text-brand-purple">{value}</span>{' '}
             <span className="text-sm text-slate-500">{label}</span>
           </div>
         ))}

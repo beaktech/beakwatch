@@ -46,10 +46,10 @@ export default function Sidebar({ detections, todayStats }) {
       </div>
 
       <div className="flex-1 overflow-hidden relative">
-        {uniqueDetections.map((d, i) => {
+        {uniqueDetections.map(d => {
           const todayCount = todayCountBySpecies[d.commonName]
           return (
-            <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-slate-100">
+            <div key={d.commonName} className="flex items-center gap-4 px-5 py-4 border-b border-slate-100">
               <BirdImage
                 commonName={d.commonName}
                 alt={d.commonName}

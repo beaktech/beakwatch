@@ -1,16 +1,10 @@
-import { useState, useEffect } from 'react'
 import BirdImage from '../BirdImage.jsx'
 import Attribution from '../Attribution.jsx'
-import { fetchWikipedia } from '../../utils/wikipedia.js'
+import Badge from '../Badge.jsx'
+import { useWikipediaExtract } from '../../hooks/useWikipediaExtract.js'
 
 export default function LastIdentified({ detection, isSpotlight, todayCount }) {
-  const [extract, setExtract] = useState(null)
-
-  useEffect(() => {
-    if (detection) {
-      fetchWikipedia(detection.commonName).then(d => setExtract(d.extract))
-    }
-  }, [detection?.commonName])
+  const extract = useWikipediaExtract(detection?.commonName)
 
   if (!detection) return null
 
@@ -28,9 +22,7 @@ export default function LastIdentified({ detection, isSpotlight, todayCount }) {
 
       {/* slide label badge */}
       <div className="absolute top-6 left-6">
-        <span className="bg-black/30 backdrop-blur-sm text-white/90 text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border border-white/20">
-          {isSpotlight ? 'Species Spotlight' : 'Last Identified'}
-        </span>
+        <Badge variant="dark">{isSpotlight ? 'Species Spotlight' : 'Last Identified'}</Badge>
       </div>
 
       {/* bottom content */}
