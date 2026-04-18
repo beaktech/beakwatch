@@ -19,10 +19,10 @@ export default function StatsBar({ todayStats, history, weather }) {
           </div>
         </div>
       )}
-      <div className="flex items-center justify-center gap-2 flex-1">
+      <div className="flex items-center justify-center flex-1">
         {stats.map(({ label, value }, i) => (
-          <div key={label} className="flex items-baseline gap-1.5 px-4">
-            {i > 0 && <span className="text-slate-200 absolute -ml-4 select-none">·</span>}
+          <div key={label} className="flex items-baseline gap-1.5 px-4 relative">
+            {i > 0 && <span className="text-slate-200 absolute -left-1 top-0 select-none" aria-hidden="true">·</span>}
             <span className="text-xl font-bold text-brand-purple">{value}</span>{' '}
             <span className="text-sm text-slate-500">{label}</span>
           </div>

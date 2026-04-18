@@ -4,6 +4,9 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('./BirdImage.jsx', () => ({
   default: ({ alt }) => <img alt={alt} />,
 }))
+vi.mock('../hooks/useServer.js', () => ({
+  useServer: () => ({ serverInfo: null, switchServer: vi.fn() }),
+}))
 
 import Sidebar from './Sidebar.jsx'
 

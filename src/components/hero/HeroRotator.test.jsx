@@ -30,9 +30,9 @@ describe('HeroRotator', () => {
     expect(screen.getByText('LastIdentified')).toBeInTheDocument()
   })
 
-  it('advances to the next slide after 5 seconds', () => {
+  it('advances to the next slide after the slide interval', () => {
     render(<HeroRotator {...props} />)
-    act(() => { vi.advanceTimersByTime(5_000) })
+    act(() => { vi.advanceTimersByTime(20_000) })
     act(() => { vi.advanceTimersByTime(500) }) // crossfade
     expect(screen.getByText('BirdProfile')).toBeInTheDocument()
   })
@@ -73,9 +73,9 @@ describe('HeroRotator', () => {
   it('skips Top30Days slide when history has no 30-day data', () => {
     render(<HeroRotator {...props} history={{ ...props.history, top30Days: [] }} />)
     // slides: last → profile → today → rare (top30 excluded)
-    act(() => { vi.advanceTimersByTime(5_000) }); act(() => { vi.advanceTimersByTime(500) })
-    act(() => { vi.advanceTimersByTime(5_000) }); act(() => { vi.advanceTimersByTime(500) })
-    act(() => { vi.advanceTimersByTime(5_000) }); act(() => { vi.advanceTimersByTime(500) })
+    act(() => { vi.advanceTimersByTime(20_000) }); act(() => { vi.advanceTimersByTime(500) })
+    act(() => { vi.advanceTimersByTime(20_000) }); act(() => { vi.advanceTimersByTime(500) })
+    act(() => { vi.advanceTimersByTime(20_000) }); act(() => { vi.advanceTimersByTime(500) })
     expect(screen.getByText('RareVisitors')).toBeInTheDocument()
   })
 })

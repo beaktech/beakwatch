@@ -69,26 +69,44 @@ describe('Express server', () => {
     expect(res.body.rareVisitors[0]).toEqual({ commonName: 'Hawfinch', allTimeCount: 1 })
   })
 
-  it('GET /api/weekly sums hourly counts across 7 previous days', async () => {
-    const hourly = Array(24).fill(0)
-    hourly[8] = 4
-    hourly[9] = 6
-    // All 7 days return the same data; counts should be summed
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [{ common_name: 'Redwing', hourly_counts: hourly }],
-    })
-    const { default: app } = await import('./index.js')
-    const res = await request(app).get('/api/weekly')
-    expect(res.status).toBe(200)
-    expect(res.body).toContainEqual({ commonName: 'Redwing', hour: 8, count: 28 }) // 4 × 7
-    expect(res.body).toContainEqual({ commonName: 'Redwing', hour: 9, count: 42 }) // 6 × 7
-  })
-
   it('GET /api/recent returns 502 when BirdNET-Go is unreachable', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
     const { default: app } = await import('./index.js')
     const res = await request(app).get('/api/recent')
     expect(res.status).toBe(502)
+  })
+
+  it('GET /api/server exposes the active server url and configured servers', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/api/server')
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('active')
+    expect(Array.isArray(res.body.servers)).toBe(true)
+  })
+
+  it('POST /api/server rejects unknown server urls with 400', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app)
+      .post('/api/server')
+      .set('Content-Type', 'application/json')
+      .send({ url: 'http://not-configured' })
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('Unknown server')
+  })
+
+  it('GET /api/weather returns temperature, wind, label and emoji', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        current: { temperature_2m: 12.4, weather_code: 2, wind_speed_10m: 8.7 },
+      }),
+    })
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/api/weather')
+    expect(res.status).toBe(200)
+    expect(res.body.temp).toBe(12)
+    expect(res.body.wind).toBe(9)
+    expect(res.body.label).toBe('Partly cloudy')
+    expect(res.body.emoji).toBe('⛅')
   })
 })

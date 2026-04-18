@@ -21,6 +21,7 @@ describe('fetchWikipedia', () => {
     expect(result).toEqual({
       extract: 'The Eurasian wren is a tiny bird.',
       photoUrl: 'https://example.com/wren.jpg',
+      attribution: null,
     })
     expect(fetch).toHaveBeenCalledWith(
       'https://en.wikipedia.org/api/rest_v1/page/summary/Eurasian%20Wren'
@@ -59,6 +60,6 @@ describe('fetchWikipedia', () => {
     const { fetchWikipedia } = await import('./wikipedia.js')
     const result = await fetchWikipedia('Nonexistent Bird')
 
-    expect(result).toEqual({ extract: null, photoUrl: null })
+    expect(result).toEqual({ extract: null, photoUrl: null, attribution: null })
   })
 })

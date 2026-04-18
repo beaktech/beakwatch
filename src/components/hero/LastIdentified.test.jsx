@@ -8,7 +8,9 @@ vi.mock('../../utils/wikipedia.js', () => ({
   fetchWikipedia: vi.fn().mockResolvedValue({
     extract: 'A tiny brown bird.',
     photoUrl: null,
+    attribution: null,
   }),
+  fetchAttribution: vi.fn().mockResolvedValue(null),
 }))
 
 import LastIdentified from './LastIdentified.jsx'

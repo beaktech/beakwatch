@@ -3,7 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('../BirdImage.jsx', () => ({ default: ({ alt }) => <img alt={alt} /> }))
 vi.mock('../../utils/wikipedia.js', () => ({
-  fetchWikipedia: vi.fn().mockResolvedValue({ extract: 'A small passerine bird.', photoUrl: null }),
+  fetchWikipedia: vi.fn().mockResolvedValue({ extract: 'A small passerine bird.', photoUrl: null, attribution: null }),
+  fetchAttribution: vi.fn().mockResolvedValue(null),
 }))
 
 import BirdProfile from './BirdProfile.jsx'

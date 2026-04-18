@@ -7,7 +7,10 @@ const CACHE_DIR = join(__dirname, '..', 'cache', 'birds')
 
 // Wikimedia requires a descriptive User-Agent identifying the app + contact.
 // See https://meta.wikimedia.org/wiki/User-Agent_policy
-const UA = 'beakwatch/0.1 (https://github.com/; bird detection kiosk) Node-fetch'
+// Operators deploying their own fork should set BEAKWATCH_CONTACT to a repo
+// URL or email so Wikimedia can reach you if rate-limit issues arise.
+const CONTACT = process.env.BEAKWATCH_CONTACT || 'https://github.com/beaktech/beakwatch'
+const UA = `beakwatch/0.1 (${CONTACT}; bird detection kiosk) Node-fetch`
 
 const inflight = new Map()
 

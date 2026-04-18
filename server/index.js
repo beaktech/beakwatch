@@ -116,45 +116,6 @@ app.get('/api/today', async (req, res) => {
   }
 })
 
-// GET /api/weekly — hourly detection counts summed across the previous 7 complete days
-app.get('/api/weekly', async (req, res) => {
-  try {
-    const days = Array.from({ length: 7 }, (_, i) => daysAgoStr(i + 1))
-    const results = await Promise.all(
-      days.map(date => birdnetFetch(`/api/v2/analytics/species/daily?date=${date}`).catch(() => []))
-    )
-    const hourCounts = {}
-    for (const dayData of results) {
-      for (const species of dayData) {
-        const name = species.common_name
-        if (!hourCounts[name]) hourCounts[name] = {}
-        species.hourly_counts.forEach((count, hour) => {
-          if (count > 0) hourCounts[name][hour] = (hourCounts[name][hour] ?? 0) + count
-        })
-      }
-    }
-    const flat = []
-    for (const [commonName, hours] of Object.entries(hourCounts)) {
-      for (const [hour, count] of Object.entries(hours)) {
-        flat.push({ commonName, hour: Number(hour), count })
-      }
-    }
-    res.json(flat)
-  } catch (err) {
-    res.status(502).json({ error: err.message })
-  }
-})
-
-// GET /api/debug/today — raw BirdNET-Go response for diagnosing field names
-app.get('/api/debug/today', async (req, res) => {
-  try {
-    const data = await birdnetFetch(`/api/v2/analytics/species/daily?date=${todayStr()}`)
-    res.json({ date: todayStr(), count: Array.isArray(data) ? data.length : 'not-array', sample: Array.isArray(data) ? data.slice(0, 2) : data })
-  } catch (err) {
-    res.status(502).json({ error: err.message })
-  }
-})
-
 // GET /api/history — aggregated stats: top 30-day species, rare visitors, counts
 // Combines three BirdNET-Go calls in parallel
 app.get('/api/history', async (req, res) => {
@@ -202,7 +163,9 @@ const WMO_EMOJI = {
 }
 app.get('/api/weather', async (req, res) => {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code,wind_speed_10m&wind_speed_unit=mph&temperature_unit=celsius&timezone=Europe%2FLondon`
+    // auto = Open-Meteo picks the timezone for the lat/lon, so weather timestamps
+    // match the kiosk's deployment location without us hard-coding Europe/London.
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code,wind_speed_10m&wind_speed_unit=mph&temperature_unit=celsius&timezone=auto`
     const data = await fetch(url).then(r => r.json())
     const { temperature_2m: temp, weather_code: code, wind_speed_10m: wind } = data.current
     res.json({
@@ -245,7 +208,7 @@ app.get('*path', (req, res) => {
 })
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => console.log(`Beaknik running on http://localhost:${PORT}`))
+  app.listen(PORT, () => console.log(`Beakwatch running on http://localhost:${PORT}`))
 }
 
 export default app

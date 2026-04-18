@@ -2,6 +2,9 @@ import { useRef, useEffect, useMemo } from 'react'
 import { toSlug } from '../../utils/formatters.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
+// Module-scope image cache survives effect re-runs so we don't reallocate
+// HTMLImageElements on every todayStats poll.
+const imageCache = new Map()
 const CELL_H = 32
 const CELL_GAP = 4
 const MAX_CELL_W = 18
@@ -80,11 +83,21 @@ export default function DailyTopBirds({ todayStats }) {
     const thumbReqWidth = Math.round(THUMB_SIZE * Math.min(dpr, 2))
     const images = {}
     top10.forEach(({ name }) => {
-      const img = new Image()
-      img.src = `/birds/${toSlug(name)}.jpg?name=${encodeURIComponent(name)}&w=${thumbReqWidth}`
+      const cacheKey = `${name}:${thumbReqWidth}`
+      let img = imageCache.get(cacheKey)
+      if (!img) {
+        img = new Image()
+        img.src = `/birds/${toSlug(name)}.jpg?name=${encodeURIComponent(name)}&w=${thumbReqWidth}`
+        img.onerror = () => { img._failed = true }
+        imageCache.set(cacheKey, img)
+      }
       images[name] = img
-      img.onload = draw
-      img.onerror = () => { img._failed = true; draw() }
+      if (img.complete) {
+        // already loaded — draw after layout
+      } else {
+        img.addEventListener('load', draw, { once: true })
+        img.addEventListener('error', draw, { once: true })
+      }
     })
 
     function draw() {

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
-import { fetchWikipedia } from '../utils/wikipedia.js'
+import { fetchAttribution } from '../utils/wikipedia.js'
 
 export default function Attribution({ commonName }) {
   const [attribution, setAttribution] = useState(null)
 
   useEffect(() => {
+    let alive = true
     setAttribution(null)
-    fetchWikipedia(commonName).then(d => setAttribution(d.attribution))
+    fetchAttribution(commonName).then(a => { if (alive) setAttribution(a) })
+    return () => { alive = false }
   }, [commonName])
 
   if (!attribution) return null

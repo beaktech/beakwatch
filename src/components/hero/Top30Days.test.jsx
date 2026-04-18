@@ -10,7 +10,7 @@ const species = [
 describe('Top30Days', () => {
   it('renders heading', () => {
     render(<Top30Days species={species} />)
-    expect(screen.getByText(/Top Species/i)).toBeInTheDocument()
+    expect(screen.getByText(/Most Popular Species/i)).toBeInTheDocument()
   })
 
   it('renders species names with counts', () => {

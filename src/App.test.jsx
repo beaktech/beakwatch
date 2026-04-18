@@ -25,7 +25,11 @@ vi.mock('./hooks/useHistory.js', () => ({
   }),
 }))
 vi.mock('./utils/wikipedia.js', () => ({
-  fetchWikipedia: vi.fn().mockResolvedValue({ extract: 'A tiny bird.', photoUrl: null }),
+  fetchWikipedia: vi.fn().mockResolvedValue({ extract: 'A tiny bird.', photoUrl: null, attribution: null }),
+  fetchAttribution: vi.fn().mockResolvedValue(null),
+}))
+vi.mock('./hooks/useServer.js', () => ({
+  useServer: () => ({ serverInfo: null, switchServer: vi.fn() }),
 }))
 
 import App from './App.jsx'

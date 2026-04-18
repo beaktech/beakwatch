@@ -1,24 +1,27 @@
 const cache = new Map()
+const originalUrlCache = new Map()
+const attributionCache = new Map()
 
 const STORAGE_PREFIX = 'wiki:'
+const ATTR_STORAGE_PREFIX = 'wiki-attr:'
 const TTL_MS = 7 * 24 * 60 * 60 * 1000  // 7 days
 
-function loadFromStorage(key) {
+function loadFromStorage(prefix, key) {
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + key)
+    const raw = localStorage.getItem(prefix + key)
     if (!raw) return null
     const { t, v } = JSON.parse(raw)
     if (Date.now() - t > TTL_MS) {
-      localStorage.removeItem(STORAGE_PREFIX + key)
+      localStorage.removeItem(prefix + key)
       return null
     }
     return v
   } catch { return null }
 }
 
-function saveToStorage(key, value) {
+function saveToStorage(prefix, key, value) {
   try {
-    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify({ t: Date.now(), v: value }))
+    localStorage.setItem(prefix + key, JSON.stringify({ t: Date.now(), v: value }))
   } catch { /* quota exceeded or storage unavailable — ignore */ }
 }
 
@@ -43,7 +46,7 @@ function stripHtml(html) {
   return html.replace(/<[^>]+>/g, '').trim()
 }
 
-async function fetchAttribution(imageUrl) {
+async function fetchAttributionFromImage(imageUrl) {
   const filename = extractFilename(imageUrl)
   if (!filename) return null
   try {
@@ -63,12 +66,14 @@ async function fetchAttribution(imageUrl) {
   }
 }
 
+// Fetches summary only — extract + photoUrl. Attribution is fetched lazily
+// by callers that need it (Attribution component) via fetchAttribution.
 export async function fetchWikipedia(commonName) {
   if (cache.has(commonName)) {
-    return cache.get(commonName)  // may be a Promise (in-flight) or resolved value
+    return cache.get(commonName)
   }
 
-  const stored = loadFromStorage(commonName)
+  const stored = loadFromStorage(STORAGE_PREFIX, commonName)
   if (stored) {
     cache.set(commonName, stored)
     return stored
@@ -82,11 +87,11 @@ export async function fetchWikipedia(commonName) {
       const data = await res.json()
       const photoUrl = data.thumbnail?.source ?? null
       const originalUrl = data.originalimage?.source ?? photoUrl
-      const attribution = await fetchAttribution(originalUrl)
+      originalUrlCache.set(commonName, originalUrl)
       return {
         extract: data.extract ?? null,
         photoUrl,
-        attribution,
+        attribution: null,
       }
     } catch {
       return { extract: null, photoUrl: null, attribution: null }
@@ -95,7 +100,31 @@ export async function fetchWikipedia(commonName) {
 
   cache.set(commonName, promise)
   const result = await promise
-  cache.set(commonName, result)  // replace Promise with resolved value
-  saveToStorage(commonName, result)
+  cache.set(commonName, result)
+  saveToStorage(STORAGE_PREFIX, commonName, result)
+  return result
+}
+
+export async function fetchAttribution(commonName) {
+  if (attributionCache.has(commonName)) {
+    return attributionCache.get(commonName)
+  }
+  const stored = loadFromStorage(ATTR_STORAGE_PREFIX, commonName)
+  if (stored) {
+    attributionCache.set(commonName, stored)
+    return stored
+  }
+
+  const promise = (async () => {
+    await fetchWikipedia(commonName)
+    const originalUrl = originalUrlCache.get(commonName)
+    if (!originalUrl) return null
+    return fetchAttributionFromImage(originalUrl)
+  })()
+
+  attributionCache.set(commonName, promise)
+  const result = await promise
+  attributionCache.set(commonName, result)
+  saveToStorage(ATTR_STORAGE_PREFIX, commonName, result)
   return result
 }

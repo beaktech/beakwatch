@@ -2,7 +2,7 @@
 
 A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows live bird detections, species spotlights, rare visitors, daily top birds, and local weather on a rotating full-screen hero panel — designed for a wall-mounted screen at a wildlife site, garden, or visitor centre.
 
-![Placeholder for screenshot](docs/screenshot.png)
+> **Note:** Beakwatch is built as a fixed-layout kiosk for large screens (≥1280px wide) and iPads in landscape. It does not have a responsive mobile layout.
 
 ## Features
 
@@ -82,6 +82,8 @@ Vite proxies `/api` and `/birds/*.jpg` to Express. Open `http://localhost:5173`.
 | `npm start`        | Serve `dist/` and the API from Express        |
 | `npm test`         | Run the Vitest suite once                     |
 | `npm run test:watch` | Vitest in watch mode                        |
+
+> **Note:** the `/api/server` POST route lets any client on the network switch the active BirdNET-Go instance. Deploy behind a trusted LAN, or gate the route if you're exposing it more widely.
 
 ## Attribution
 

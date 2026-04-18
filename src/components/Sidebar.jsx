@@ -23,12 +23,15 @@ export default function Sidebar({ detections, todayStats }) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="relative flex h-3.5 w-3.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500" />
-          </span>
-          <span className="text-sm font-bold tracking-widest text-red-500">LIVE</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3" aria-hidden="true">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+            </span>
+            <span className="text-xs font-bold tracking-widest text-red-500">LIVE</span>
+          </div>
+          <h2 className="text-base font-semibold text-slate-800 leading-tight">Live from the Canopy</h2>
         </div>
         {serverInfo && serverInfo.servers.length > 1 && (
           <button
