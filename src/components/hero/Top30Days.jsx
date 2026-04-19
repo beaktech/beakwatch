@@ -1,4 +1,5 @@
 import BirdImage from '../BirdImage.jsx'
+import AttributionTooltip from '../AttributionTooltip.jsx'
 
 export default function Top30Days({ species }) {
   const max = species[0]?.count || 1
@@ -13,12 +14,14 @@ export default function Top30Days({ species }) {
             <span className="text-sm font-bold text-brand-green w-5 text-right flex-shrink-0">
               {i + 1}
             </span>
-            <BirdImage
-              commonName={s.commonName}
-              alt={s.commonName}
-              width={40}
-              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-            />
+            <AttributionTooltip commonName={s.commonName}>
+              <BirdImage
+                commonName={s.commonName}
+                alt={s.commonName}
+                width={40}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+              />
+            </AttributionTooltip>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-slate-700 truncate">{s.commonName}</span>

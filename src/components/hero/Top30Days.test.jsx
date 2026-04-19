@@ -1,5 +1,13 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('../BirdImage.jsx', () => ({
+  default: ({ alt }) => <img alt={alt} />,
+}))
+vi.mock('../../hooks/useAttribution.js', () => ({
+  useAttribution: () => null,
+}))
+
 import Top30Days from './Top30Days.jsx'
 
 const species = [
