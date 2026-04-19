@@ -1,24 +1,15 @@
-import { useState, useEffect } from 'react'
-import { fetchAttribution } from '../utils/wikipedia.js'
+import { useAttribution } from '../hooks/useAttribution.js'
 
 export default function Attribution({ commonName }) {
-  const [attribution, setAttribution] = useState(null)
-
-  useEffect(() => {
-    let alive = true
-    setAttribution(null)
-    fetchAttribution(commonName).then(a => { if (alive) setAttribution(a) })
-    return () => { alive = false }
-  }, [commonName])
-
+  const attribution = useAttribution(commonName)
   if (!attribution) return null
 
   const parts = [attribution.artist, attribution.license].filter(Boolean).join(' / ')
   if (!parts) return null
 
   return (
-    <span className="absolute bottom-2 right-2 text-[10px] text-white/50 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full leading-tight pointer-events-none">
-      {parts}
+    <span className="absolute bottom-3 right-3 text-[11px] text-white/70 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full leading-tight pointer-events-none">
+      © {parts}
     </span>
   )
 }
