@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import BirdImage from './BirdImage.jsx'
+import AttributionTooltip from './AttributionTooltip.jsx'
 import { timeAgo } from '../utils/formatters.js'
 import { useServer } from '../hooks/useServer.js'
 
@@ -53,12 +54,14 @@ export default function Sidebar({ detections, todayStats }) {
           const todayCount = todayCountBySpecies[d.commonName]
           return (
             <div key={d.commonName} className="flex items-center gap-4 px-5 py-4 border-b border-slate-100">
-              <BirdImage
-                commonName={d.commonName}
-                alt={d.commonName}
-                width={80}
-                className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
-              />
+              <AttributionTooltip commonName={d.commonName}>
+                <BirdImage
+                  commonName={d.commonName}
+                  alt={d.commonName}
+                  width={80}
+                  className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+                />
+              </AttributionTooltip>
               <div className="min-w-0 flex-1">
                 <p className="text-base font-semibold text-slate-800 leading-snug">{d.commonName}</p>
                 <p className="text-sm text-slate-400 mt-0.5">{timeAgo(d.timestamp)}</p>

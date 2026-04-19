@@ -4,6 +4,9 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('./BirdImage.jsx', () => ({
   default: ({ alt }) => <img alt={alt} />,
 }))
+vi.mock('../hooks/useAttribution.js', () => ({
+  useAttribution: () => null,
+}))
 vi.mock('../hooks/useServer.js', () => ({
   useServer: () => ({ serverInfo: null, switchServer: vi.fn() }),
 }))
