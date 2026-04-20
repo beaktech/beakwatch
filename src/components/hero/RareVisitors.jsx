@@ -16,12 +16,12 @@ export default function RareVisitors({ species }) {
               width={400}
               className="absolute inset-0 w-full h-full object-contain"
             />
-            <Attribution commonName={s.commonName} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent" />
+            <Attribution commonName={s.commonName} variant="subtle" />
             <div className="absolute top-3 right-3">
               <Badge variant="light">#{i + 1} rarest</Badge>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="absolute top-0 left-0 right-0 p-4 pr-20">
               <p className="text-white font-bold text-sm leading-tight">{s.commonName}</p>
               <p className="text-white/60 text-xs mt-0.5">
                 {s.allTimeCount} {s.allTimeCount === 1 ? 'detection' : 'detections'} ever

@@ -18,8 +18,8 @@ export default function Top30Days({ species }) {
               <BirdImage
                 commonName={s.commonName}
                 alt={s.commonName}
-                width={40}
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                width={64}
+                className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
               />
             </AttributionTooltip>
             <div className="flex-1 min-w-0">

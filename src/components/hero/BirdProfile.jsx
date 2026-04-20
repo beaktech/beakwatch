@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import BirdImage from '../BirdImage.jsx'
 import Attribution from '../Attribution.jsx'
 import Badge from '../Badge.jsx'
@@ -9,6 +9,32 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 export default function BirdProfile({ detection, todayStats }) {
   const extract = useWikipediaExtract(detection.commonName)
+  const photoRef = useRef(null)
+  const [natural, setNatural] = useState(null)
+  const [imageBox, setImageBox] = useState(null)
+
+  const recomputeBox = useCallback(() => {
+    if (!photoRef.current || !natural) return
+    const { width: cw, height: ch } = photoRef.current.getBoundingClientRect()
+    if (!cw || !ch) return
+    const scale = Math.min(cw / natural.w, ch / natural.h)
+    const w = natural.w * scale
+    const h = natural.h * scale
+    setImageBox({
+      left: (cw - w) / 2,
+      top: (ch - h) / 2,
+      width: w,
+      height: h,
+    })
+  }, [natural])
+
+  useEffect(() => {
+    if (!photoRef.current || typeof ResizeObserver === 'undefined') return
+    recomputeBox()
+    const ro = new ResizeObserver(recomputeBox)
+    ro.observe(photoRef.current)
+    return () => ro.disconnect()
+  }, [recomputeBox])
 
   const { hourly, todayTotal, maxCount, peakHour } = useMemo(() => {
     const hourly = Array(24).fill(0)
@@ -27,15 +53,24 @@ export default function BirdProfile({ detection, todayStats }) {
     <div className="h-full flex bg-white">
 
       {/* Left: photo, contained so it never upscales */}
-      <div className="relative w-[45%] flex-shrink-0 overflow-hidden bg-slate-900">
+      <div ref={photoRef} className="relative w-[45%] flex-shrink-0 overflow-hidden bg-slate-900">
         <BirdImage
           commonName={detection.commonName}
           alt={detection.commonName}
           width={800}
           className="absolute inset-0 w-full h-full object-contain"
+          onLoad={e => setNatural({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
         />
-        <Attribution commonName={detection.commonName} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        {imageBox && (
+          <Attribution
+            commonName={detection.commonName}
+            style={{
+              right: `${imageBox.left + 12}px`,
+              bottom: `${imageBox.top + 12}px`,
+            }}
+          />
+        )}
         <div className="absolute top-6 left-6">
           <Badge variant="dark">Species Profile</Badge>
         </div>

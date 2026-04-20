@@ -16,9 +16,9 @@ export default function LastIdentified({ detection, isSpotlight, todayCount }) {
         width={1000}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <Attribution commonName={detection.commonName} />
       {/* gradient: transparent top → strong dark bottom */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+      <Attribution commonName={detection.commonName} />
 
       {/* slide label badge */}
       <div className="absolute top-6 left-6">

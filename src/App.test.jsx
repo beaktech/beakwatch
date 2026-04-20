@@ -37,7 +37,7 @@ import App from './App.jsx'
 describe('App', () => {
   it('renders the sidebar', async () => {
     await act(async () => { render(<App />) })
-    expect(screen.getByText('Live from the Canopy')).toBeInTheDocument()
+    expect(screen.getByText('Recent sightings')).toBeInTheDocument()
   })
 
   it('renders the stats bar', async () => {

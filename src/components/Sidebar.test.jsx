@@ -19,9 +19,9 @@ const detections = [
 ]
 
 describe('Sidebar', () => {
-  it('renders "Live from the Canopy" heading', () => {
+  it('renders "Recent sightings" heading', () => {
     render(<Sidebar detections={detections} todayStats={[]} />)
-    expect(screen.getByText('Live from the Canopy')).toBeInTheDocument()
+    expect(screen.getByText('Recent sightings')).toBeInTheDocument()
   })
 
   it('renders a card for each detection', () => {

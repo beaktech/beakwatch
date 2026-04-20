@@ -4,7 +4,10 @@ export function useServer() {
   const [serverInfo, setServerInfo] = useState(null)
 
   useEffect(() => {
-    fetch('/api/server').then(r => r.json()).then(setServerInfo)
+    fetch('/api/server')
+      .then(r => r.json())
+      .then(setServerInfo)
+      .catch(err => console.warn('[useServer] failed to fetch server info:', err))
   }, [])
 
   async function switchServer() {

@@ -3,7 +3,7 @@ import { toSlug } from '../utils/formatters.js'
 
 const PLACEHOLDER = '/birds/placeholder.svg'
 
-export default function BirdImage({ commonName, alt, className = '', width = 320 }) {
+export default function BirdImage({ commonName, alt, className = '', width = 320, onLoad }) {
   const [failed, setFailed] = useState(false)
 
   const slug = toSlug(commonName)
@@ -18,6 +18,7 @@ export default function BirdImage({ commonName, alt, className = '', width = 320
       src={src}
       alt={alt}
       className={className}
+      onLoad={onLoad}
       onError={() => setFailed(true)}
     />
   )

@@ -32,7 +32,7 @@ export default function Sidebar({ detections, todayStats }) {
             </span>
             <span className="text-xs font-bold tracking-widest text-red-500">LIVE</span>
           </div>
-          <h2 className="text-base font-semibold text-slate-800 leading-tight">Live from the Canopy</h2>
+          <h2 className="text-sm font-medium text-slate-500 leading-tight">Recent sightings</h2>
         </div>
         {serverInfo && serverInfo.servers.length > 1 && (
           <button
@@ -54,7 +54,7 @@ export default function Sidebar({ detections, todayStats }) {
           const todayCount = todayCountBySpecies[d.commonName]
           return (
             <div key={d.commonName} className="flex items-center gap-4 px-5 py-4 border-b border-slate-100">
-              <AttributionTooltip commonName={d.commonName}>
+              <AttributionTooltip commonName={d.commonName} placement="right">
                 <BirdImage
                   commonName={d.commonName}
                   alt={d.commonName}

@@ -7,7 +7,6 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i)
 const imageCache = new Map()
 const CELL_H = 32
 const CELL_GAP = 4
-const MAX_CELL_W = 18
 const THUMB_SIZE = 28
 const THUMB_GAP = 8
 const LABEL_W = 170
@@ -152,14 +151,12 @@ export default function DailyTopBirds({ todayStats }) {
         const y = HEADER_H + row * (cellH + CELL_GAP)
         const maxForRow = Math.max(1, ...Object.values(hours))
 
-        // Circular thumbnail
+        // Rounded-square thumbnail
         const img = images[name]
         const thumbX = 0
         const thumbY = y + (cellH - thumbSize) / 2
         ctx.save()
-        ctx.beginPath()
-        ctx.arc(thumbX + thumbSize / 2, thumbY + thumbSize / 2, thumbSize / 2, 0, Math.PI * 2)
-        ctx.closePath()
+        roundRect(ctx, thumbX, thumbY, thumbSize, thumbSize, CELL_RADIUS)
         if (img?.complete && img.naturalWidth > 0 && !img._failed) {
           ctx.clip()
           ctx.drawImage(img, thumbX, thumbY, thumbSize, thumbSize)
