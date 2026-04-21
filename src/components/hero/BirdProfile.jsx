@@ -129,13 +129,13 @@ export default function BirdProfile({ detection, todayStats }) {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
               Activity today by hour
             </p>
-            <div className="flex items-end gap-px h-14">
+            <div className="flex items-end gap-px h-14 pt-2">
               {HOURS.map(h => {
                 const isCurrent = h === currentHour
                 const isPeak = h === peakHour
                 const barColor = hourly[h] === 0
                   ? null
-                  : isPeak ? 'var(--color-brand-green)' : isCurrent ? '#f59e0b' : 'var(--color-brand-green-light)'
+                  : isPeak ? 'var(--color-brand-green)' : 'var(--color-brand-green-light)'
                 return (
                   <div key={h} className="flex-1 h-full relative">
                     <div className="absolute inset-0 rounded-sm bg-slate-100" />
@@ -143,6 +143,20 @@ export default function BirdProfile({ detection, todayStats }) {
                       <div
                         className="absolute bottom-0 left-0 right-0 rounded-sm transition-all"
                         style={{ height: `${Math.max(4, (hourly[h] / maxCount) * 100)}%`, backgroundColor: barColor }}
+                      />
+                    )}
+                    {isCurrent && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-1/2 -translate-x-1/2"
+                        style={{
+                          top: '-7px',
+                          width: 0,
+                          height: 0,
+                          borderLeft: '4px solid transparent',
+                          borderRight: '4px solid transparent',
+                          borderTop: '6px solid #f59e0b',
+                        }}
                       />
                     )}
                   </div>

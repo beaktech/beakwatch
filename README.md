@@ -4,6 +4,14 @@ A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows 
 
 > **Note:** Beakwatch is built as a fixed-layout kiosk for large screens (≥1280px wide) and iPads in landscape. It does not have a responsive mobile layout.
 
+## Screenshots
+
+![Last identified](docs/screenshots/1.png)
+![Species profile](docs/screenshots/2.png)
+![Activity patterns](docs/screenshots/3.png)
+![Most popular species](docs/screenshots/4.png)
+![Rare visitors](docs/screenshots/5.png)
+
 ## Features
 
 - **Live detections sidebar** — newest detection per species, deduplicated.

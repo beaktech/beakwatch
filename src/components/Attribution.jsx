@@ -1,7 +1,7 @@
 import { useAttribution } from '../hooks/useAttribution.js'
 
 const VARIANT_CLASSES = {
-  default: 'text-white bg-black backdrop-blur-sm ring-1 ring-white/25',
+  default: 'text-white bg-black backdrop-blur-sm',
   subtle: 'text-white/70 bg-black/50 backdrop-blur-sm',
 }
 
