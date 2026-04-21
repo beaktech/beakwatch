@@ -1,0 +1,35 @@
+import BirdImage from '../BirdImage.jsx'
+import Attribution from '../Attribution.jsx'
+import Badge from '../Badge.jsx'
+
+export default function RareVisitors({ species }) {
+  return (
+    <div className="h-full flex flex-col p-8 bg-white">
+      <h2 className="text-2xl font-bold text-slate-800 mb-1">Rare Visitors</h2>
+      <p className="text-sm text-slate-400 mb-5">Least frequently seen at this sanctuary</p>
+      <div className="grid grid-cols-3 grid-rows-2 gap-7 flex-1 min-h-0 max-h-[80%]">
+        {species.slice(0, 6).map((s, i) => (
+          <div key={s.commonName} className="relative rounded-2xl overflow-hidden bg-slate-900">
+            <BirdImage
+              commonName={s.commonName}
+              alt={s.commonName}
+              width={400}
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent" />
+            <Attribution commonName={s.commonName} variant="subtle" />
+            <div className="absolute top-3 right-3">
+              <Badge variant="light">#{i + 1} rarest</Badge>
+            </div>
+            <div className="absolute top-0 left-0 right-0 p-4 pr-20">
+              <p className="text-white font-bold text-sm leading-tight">{s.commonName}</p>
+              <p className="text-white/60 text-xs mt-0.5">
+                {s.allTimeCount} {s.allTimeCount === 1 ? 'detection' : 'detections'} ever
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

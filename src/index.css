@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #5c9430;
+  --color-brand-green-light: #90c45f;
+  --color-brand-green-deep: #3a6b14;
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    background-color: #f8fafc;
+    color: #1e293b;
+    font-family: Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
