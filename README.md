@@ -1,6 +1,8 @@
 # Beakwatch
 
-A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows live bird detections, species spotlights, rare visitors, daily top birds, and local weather on a rotating full-screen hero panel — designed for a wall-mounted screen/ipad to show your live detections and statistics in a beautiful way, without any interaction necessary. This works particularly well in public places, where you want to promote awareness of birds to those in the area - you could even put a screen in your front window to show the neighbours the wildlife they are living with.
+A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows live bird detections, species spotlights, rare visitors, daily top birds, and local weather on a rotating full-screen hero panel. Designed for a wall-mounted screen/ipad to show your live detections and statistics in a beautiful way, without any interaction necessary. 
+
+This may just be so you can have a nice display at home for your family. But works particularly well in public places. Maybe you want to promote awareness of birds to those in the area and you could even place a screen in your front window to show the neighbours the wildlife they are living with!
 
 > **Note:** Beakwatch is built as a fixed-layout for large screens (≥1280px wide) and iPads in landscape. It does not have a responsive mobile layout.
 
