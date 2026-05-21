@@ -50,9 +50,24 @@ async function fetchWithRetry(url, { retries = 3, backoffMs = 1500 } = {}) {
   }
 }
 
-function resizeWikiPhoto(url, width) {
+// Wikimedia's image servers only generate thumbnails at a fixed set of
+// standard widths. Direct (hotlinked) requests for any other width are
+// rejected with HTTP 400 ("Use thumbnail sizes listed on ...").
+// See https://www.mediawiki.org/wiki/Common_thumbnail_sizes
+const WIKI_THUMB_WIDTHS = [20, 40, 60, 120, 250, 330, 500, 960, 1280, 1920, 3840]
+
+// Round a requested width UP to the nearest standard Wikimedia size, matching
+// how Wikimedia itself rounds API requests. The browser scales the slightly
+// larger image down in CSS, so no detail is lost.
+function snapToWikiWidth(width) {
+  return WIKI_THUMB_WIDTHS.find(w => w >= width) ?? WIKI_THUMB_WIDTHS[WIKI_THUMB_WIDTHS.length - 1]
+}
+
+// Rewrites a Wikimedia thumbnail URL (.../<oldW>px-Name.jpg) to a standard width.
+export function resizeWikiPhoto(url, width) {
   if (!url || !width) return url
-  return url.replace(/\/(\d+)px-([^/]+)$/, (_m, _o, name) => `/${Math.round(width)}px-${name}`)
+  const target = snapToWikiWidth(Math.round(width))
+  return url.replace(/\/(\d+)px-([^/]+)$/, (_m, _oldW, name) => `/${target}px-${name}`)
 }
 
 async function downloadFromWikipedia(commonName, width) {
