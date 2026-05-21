@@ -53,6 +53,9 @@ describe('getBirdImage', () => {
     expect(result.length).toBe(buf.length)
     const onDisk = await fs.readFile(join(CACHE_DIR, 'wren-200.jpg'))
     expect(onDisk.length).toBe(buf.length)
+    // The width requested from Wikimedia must be a standard size, or it 400s.
+    // 200 is not standard; it must round up to 250.
+    expect(global.fetch.mock.calls[1][0]).toContain('/250px-Wren.jpg')
   })
 
   it('serves from disk cache without calling Wikipedia on a hit', async () => {
@@ -109,6 +112,25 @@ describe('getBirdImage', () => {
     expect(imgCalls).toBe(1)
   })
 
+  it('requests a standard Wikimedia size even when a non-standard width is asked for', async () => {
+    const buf = pngBuffer()
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ thumbnail: { source: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Tit.jpg/330px-Tit.jpg' } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+      })
+
+    const { getBirdImage } = await import('./birdImages.js')
+    // 160 is the real width the kiosk asks for — not a Wikimedia size.
+    await getBirdImage({ slug: 'tit', name: 'Tit', width: 160 })
+
+    expect(global.fetch.mock.calls[1][0]).toContain('/250px-Tit.jpg')
+  })
+
   it('retries after a 429 with Retry-After then succeeds', async () => {
     const buf = pngBuffer()
     let call = 0
@@ -137,5 +159,31 @@ describe('getBirdImage', () => {
     const result = await getBirdImage({ slug: 'r', name: 'R', width: 60 })
     expect(result.length).toBe(buf.length)
     expect(call).toBe(3)
+  })
+})
+
+describe('resizeWikiPhoto', () => {
+  const THUMB = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Wren.jpg/330px-Wren.jpg'
+
+  it('snaps a non-standard width up to the nearest Wikimedia standard size', async () => {
+    const { resizeWikiPhoto } = await import('./birdImages.js')
+    expect(resizeWikiPhoto(THUMB, 160)).toContain('/250px-Wren.jpg')
+    expect(resizeWikiPhoto(THUMB, 800)).toContain('/960px-Wren.jpg')
+  })
+
+  it('keeps a width that is already a standard size', async () => {
+    const { resizeWikiPhoto } = await import('./birdImages.js')
+    expect(resizeWikiPhoto(THUMB, 120)).toContain('/120px-Wren.jpg')
+  })
+
+  it('caps an oversized request at the largest standard size', async () => {
+    const { resizeWikiPhoto } = await import('./birdImages.js')
+    expect(resizeWikiPhoto(THUMB, 99999)).toContain('/3840px-Wren.jpg')
+  })
+
+  it('leaves a non-thumbnail URL unchanged', async () => {
+    const { resizeWikiPhoto } = await import('./birdImages.js')
+    const original = 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Wren.jpg'
+    expect(resizeWikiPhoto(original, 160)).toBe(original)
   })
 })
