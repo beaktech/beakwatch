@@ -1,13 +1,14 @@
 import express from 'express'
+import { existsSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import dotenv from 'dotenv'
 import { getBirdImage } from './birdImages.js'
 
-dotenv.config({ path: new URL('.env', import.meta.url).pathname })
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: join(__dirname, '.env') })
 const app = express()
+app.disable('x-powered-by')
 app.use(express.json())
 const PORT = process.env.PORT || 3000
 const LAT = process.env.LAT || '51.5074'
@@ -24,7 +25,14 @@ const SERVERS = (() => {
   if (urls.length === 0) {
     console.warn('[server] No BirdNET-Go URL configured. Set BIRDNET_GO_URL in .env')
   }
-  return urls.map((url, i) => ({ url, name: names[i] || new URL(url).hostname }))
+  return urls.flatMap((url, i) => {
+    try {
+      return [{ url, name: names[i] || new URL(url).hostname }]
+    } catch {
+      console.error(`[server] Invalid BIRDNET_GO_URL "${url}" — must be a full URL incl. protocol, e.g. http://192.168.1.10:8080`)
+      return []
+    }
+  })
 })()
 let activeServerUrl = SERVERS[0]?.url ?? null
 
@@ -186,6 +194,9 @@ app.get('/birds/:filename', async (req, res, next) => {
   const m = req.params.filename.match(/^(.+)\.jpg$/)
   if (!m) return next()
   const slug = m[1]
+  // Slugs come from toSlug() client-side and are always [a-z0-9-]. Anything
+  // else (encoded slashes, dots) could escape cache/birds/ via path traversal.
+  if (!/^[a-z0-9-]+$/.test(slug)) return res.status(400).json({ error: 'Invalid image name' })
   const name = req.query.name
   const width = Math.min(2000, Math.max(1, parseInt(req.query.w, 10) || 320))
   if (!name) return next()
@@ -201,6 +212,9 @@ app.get('/birds/:filename', async (req, res, next) => {
   }
 })
 
+// Unknown API paths get a JSON 404 rather than falling through to the SPA shell.
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }))
+
 app.use(express.static(join(__dirname, '..', 'dist')))
 
 app.get('*path', (req, res) => {
@@ -208,6 +222,9 @@ app.get('*path', (req, res) => {
 })
 
 if (process.env.NODE_ENV !== 'test') {
+  if (!existsSync(join(__dirname, '..', 'dist', 'index.html'))) {
+    console.warn('[server] dist/index.html not found — run `npm run build` first, or use `npm run dev` for development')
+  }
   app.listen(PORT, () => console.log(`Beakwatch running on http://localhost:${PORT}`))
 }
 

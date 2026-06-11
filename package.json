@@ -2,6 +2,12 @@
   "name": "beakwatch",
   "private": true,
   "version": "0.1.0",
+  "description": "A kiosk display for BirdNET-Go — live bird detections, species spotlights, and local weather on a rotating full-screen panel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beaktech/beakwatch.git"
+  },
   "type": "module",
   "engines": {
     "node": ">=20"

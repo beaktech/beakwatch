@@ -1,8 +1,10 @@
-# Beakwatch
+# BeakWatch
 
-A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows live bird detections, species spotlights, rare visitors, daily top birds, and local weather on a rotating full-screen hero panel — designed for a wall-mounted screen at a wildlife site, garden, or visitor centre.
+A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows live bird detections, species spotlights, rare visitors, daily top birds, and local weather on a rotating full-screen hero panel. Designed for a wall-mounted screen/iPad to show your live detections and statistics in a beautiful way, without any interaction necessary.
 
-> **Note:** Beakwatch is built as a fixed-layout kiosk for large screens (≥1280px wide) and iPads in landscape. It does not have a responsive mobile layout.
+This may just be so you can have a nice display at home for your family. But works particularly well in public places. Maybe you want to promote awareness of birds to those in the area and you could even place a screen in your front window to show the neighbours the wildlife they are living with!
+
+> **Note:** Beakwatch is built as a fixed-layout for large screens (≥1280px wide) and iPads in landscape. It does not have a responsive mobile layout.
 
 ## Screenshots
 
@@ -28,11 +30,14 @@ A kiosk display for [BirdNET-Go](https://github.com/tphakala/birdnet-go). Shows 
 ## Quick start
 
 ```bash
-git clone https://github.com/<you>/beakwatch
+# 1. Clone and install repo:
+git clone https://github.com/beaktech/beakwatch
 cd beakwatch
 npm install
+# 2. Create new env from example, uncomment lines and add your details (at minimum set BIRDNET_GO_URL):
 cp .env.example server/.env
-# edit server/.env — at minimum set BIRDNET_GO_URL
+nano server/.env
+# 3. run it!
 npm run build
 npm start
 ```
@@ -91,7 +96,18 @@ Vite proxies `/api` and `/birds/*.jpg` to Express. Open `http://localhost:5173`.
 | `npm test`         | Run the Vitest suite once                     |
 | `npm run test:watch` | Vitest in watch mode                        |
 
-> **Note:** the `/api/server` POST route lets any client on the network switch the active BirdNET-Go instance. Deploy behind a trusted LAN, or gate the route if you're exposing it more widely.
+### Trust model
+
+Beakwatch is designed for a **trusted LAN** and has no authentication. Specifically:
+
+- The `/api/server` POST route lets any client on the network switch the active BirdNET-Go instance.
+- The `/birds/*.jpg` route lets any client trigger Wikipedia downloads and disk writes to `cache/`, and the `?name=` parameter controls which Wikipedia page an image is cached from — so a client could fill the disk or poison cached images.
+
+If you expose Beakwatch beyond a network you trust, put it behind a reverse proxy with auth, or gate these routes yourself.
+
+## Contributing
+
+Issues and PRs are welcome. Before opening a PR, run `npm run lint && npm test` — CI runs both plus a build.
 
 ## Attribution
 

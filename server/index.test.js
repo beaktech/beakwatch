@@ -94,6 +94,62 @@ describe('Express server', () => {
     expect(res.body.error).toBe('Unknown server')
   })
 
+  it('GET /birds rejects slugs containing path traversal with 400', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/birds/..%2f..%2fserver%2findex-320.jpg?name=Robin&w=320')
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('Invalid image name')
+  })
+
+  it('GET /birds rejects slugs with dots or unexpected characters with 400', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/birds/..%5c..%5cfoo.jpg?name=Robin')
+    expect(res.status).toBe(400)
+  })
+
+  it('GET /birds passes clean slugs through to the image cache', async () => {
+    vi.doMock('./birdImages.js', () => ({
+      getBirdImage: vi.fn().mockResolvedValue(Buffer.from('jpegbytes')),
+    }))
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/birds/eurasian-robin.jpg?name=European%20Robin&w=320')
+    expect(res.status).toBe(200)
+    expect(res.headers['content-type']).toBe('image/jpeg')
+    vi.doUnmock('./birdImages.js')
+  })
+
+  it('GET unknown /api routes returns 404 JSON instead of the SPA shell', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/api/does-not-exist')
+    expect(res.status).toBe(404)
+    expect(res.body.error).toBe('Not found')
+  })
+
+  it('does not expose the X-Powered-By header', async () => {
+    const { default: app } = await import('./index.js')
+    const res = await request(app).get('/api/server')
+    expect(res.headers['x-powered-by']).toBeUndefined()
+  })
+
+  it('survives a malformed BIRDNET_GO_URL with a clear warning instead of crashing', async () => {
+    const prev = { url: process.env.BIRDNET_GO_URL, urls: process.env.BIRDNET_GO_URLS }
+    process.env.BIRDNET_GO_URL = '192.168.1.10:8080' // missing http://
+    delete process.env.BIRDNET_GO_URLS
+    const warn = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const { default: app } = await import('./index.js')
+      const res = await request(app).get('/api/server')
+      expect(res.status).toBe(200)
+      expect(res.body.servers).toEqual([])
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('BIRDNET_GO_URL'))
+    } finally {
+      warn.mockRestore()
+      if (prev.url === undefined) delete process.env.BIRDNET_GO_URL
+      else process.env.BIRDNET_GO_URL = prev.url
+      if (prev.urls !== undefined) process.env.BIRDNET_GO_URLS = prev.urls
+    }
+  })
+
   it('GET /api/weather returns temperature, wind, label and emoji', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

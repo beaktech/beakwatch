@@ -4,3 +4,8 @@ cache/
 server/.env
 .claude/
 .DS_Store
+
+# internal working docs — never publish
+REVIEW.md
+CODE_REVIEW_GUIDE.md
+docs/superpowers/
