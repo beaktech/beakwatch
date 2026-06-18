@@ -70,6 +70,34 @@ describe('HeroRotator', () => {
     expect(screen.getByText('LastIdentified')).toBeInTheDocument()
   })
 
+  it('does not inject a resting slide when only some data is missing, and explains why panels are hidden', () => {
+    const stale = [
+      { commonName: 'Wren', timestamp: new Date(Date.now() - 3 * 60 * 60_000).toISOString(), confidence: 0.9 },
+    ]
+    // Stale detections (Last Identified unavailable) + no today data (Activity
+    // Patterns unavailable), but 30-day history present.
+    render(<HeroRotator {...props} detections={stale} todayStats={[]} />)
+
+    // First available slide is BirdProfile — no resting/NoActivity in rotation
+    expect(screen.getByText('BirdProfile')).toBeInTheDocument()
+    expect(screen.queryByText('NoActivity')).not.toBeInTheDocument()
+
+    // A persistent notice explains why some panels are hidden, with the gap
+    const notice = screen.getByRole('status')
+    expect(notice).toHaveTextContent(/No new detections in the last 3 hours/i)
+    expect(notice).toHaveTextContent(/panels inactive/i)
+
+    // Rotating through the available slides never surfaces NoActivity
+    act(() => { vi.advanceTimersByTime(20_000) }); act(() => { vi.advanceTimersByTime(500) })
+    act(() => { vi.advanceTimersByTime(20_000) }); act(() => { vi.advanceTimersByTime(500) })
+    expect(screen.queryByText('NoActivity')).not.toBeInTheDocument()
+  })
+
+  it('shows no "panels hidden" notice when every slide has data', () => {
+    render(<HeroRotator {...props} />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('skips Top30Days slide when history has no 30-day data', () => {
     render(<HeroRotator {...props} history={{ ...props.history, top30Days: [] }} />)
     // slides: last → profile → today → rare (top30 excluded)

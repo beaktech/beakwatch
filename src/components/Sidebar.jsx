@@ -37,10 +37,10 @@ export default function Sidebar({ detections, todayStats }) {
         {serverInfo && serverInfo.servers.length > 1 && (
           <button
             onClick={switchServer}
-            title={`Switch to ${serverInfo.servers.find(s => s.url !== serverInfo.active)?.name ?? ''}`}
+            aria-label={`Switch to ${serverInfo.servers.find(s => s.url !== serverInfo.active)?.name ?? 'other server'}`}
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
               <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
             </svg>

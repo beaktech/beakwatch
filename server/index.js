@@ -6,11 +6,15 @@ import dotenv from 'dotenv'
 import { getBirdImage } from './birdImages.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-dotenv.config({ path: join(__dirname, '.env') })
+// Skip in tests so the suite controls its own env and never inherits a
+// developer's local server/.env (which would make assertions non-hermetic).
+if (process.env.NODE_ENV !== 'test') {
+  dotenv.config({ path: join(__dirname, '.env') })
+}
 const app = express()
 app.disable('x-powered-by')
 app.use(express.json())
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 2325
 const LAT = process.env.LAT || '51.5074'
 const LON = process.env.LON || '-0.1278'
 

@@ -1,12 +1,8 @@
-import { usePolling } from './usePolling.js'
+import { createPollingHook } from './createPollingHook.js'
 
-async function fetchRecent() {
-  const res = await fetch('/api/recent')
-  if (!res.ok) throw new Error('Failed to fetch recent detections')
-  return res.json()
-}
+const usePoll = createPollingHook('/api/recent', 15_000)
 
 export function useDetections() {
-  const { data, lastSuccessAt } = usePolling(fetchRecent, 15_000)
+  const { data, lastSuccessAt } = usePoll()
   return { detections: data ?? [], lastSuccessAt }
 }

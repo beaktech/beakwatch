@@ -3,7 +3,6 @@
 @theme {
   --color-brand-green: #5c9430;
   --color-brand-green-light: #90c45f;
-  --color-brand-green-deep: #3a6b14;
 }
 
 @layer base {

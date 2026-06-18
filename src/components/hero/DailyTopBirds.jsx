@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react'
-import { toSlug } from '../../utils/formatters.js'
+import { birdImageUrl } from '../../utils/preload.js'
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 // Module-scope image cache survives effect re-runs so we don't reallocate
@@ -78,17 +78,15 @@ export default function DailyTopBirds({ todayStats }) {
 
     // Thumbnails are served by the server image cache (server/birdImages.js) —
     // missing images are fetched from Wikipedia and cached to disk on first request.
-    const dpr = window.devicePixelRatio || 1
-    const thumbReqWidth = Math.round(THUMB_SIZE * Math.min(dpr, 2))
     const images = {}
     top10.forEach(({ name }) => {
-      const cacheKey = `${name}:${thumbReqWidth}`
-      let img = imageCache.get(cacheKey)
+      const url = birdImageUrl(name, THUMB_SIZE)
+      let img = imageCache.get(url)
       if (!img) {
         img = new Image()
-        img.src = `/birds/${toSlug(name)}.jpg?name=${encodeURIComponent(name)}&w=${thumbReqWidth}`
+        img.src = url
         img.onerror = () => { img._failed = true }
-        imageCache.set(cacheKey, img)
+        imageCache.set(url, img)
       }
       images[name] = img
       if (img.complete) {

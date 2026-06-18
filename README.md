@@ -42,7 +42,7 @@ npm run build
 npm start
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:2325`.
 
 ## Configuration
 
@@ -55,7 +55,7 @@ All config lives in `server/.env` (see `.env.example`).
 | `BIRDNET_GO_NAMES`   | hostname    | Comma-separated display names matching `BIRDNET_GO_URLS` (e.g. `Garden,Office`).           |
 | `LAT`                | `51.5074`   | Latitude for the weather widget.                                                           |
 | `LON`                | `-0.1278`   | Longitude for the weather widget.                                                          |
-| `PORT`               | `3000`      | Port the kiosk server listens on.                                                          |
+| `PORT`               | `2325`      | Port the kiosk server listens on. Dev mode proxies to this too.                            |
 
 ## Architecture
 
@@ -81,7 +81,7 @@ The `cache/` directory is gitignored and grows organically as new species are de
 ```bash
 npm install
 cp .env.example server/.env
-npm run dev    # vite (5173) + nodemon-watched express (3000)
+npm run dev    # vite (5173, or next free port) + nodemon-watched express (2325)
 ```
 
 Vite proxies `/api` and `/birds/*.jpg` to Express. Open `http://localhost:5173`.

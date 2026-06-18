@@ -1,12 +1,8 @@
-import { usePolling } from './usePolling.js'
+import { createPollingHook } from './createPollingHook.js'
 
-async function fetchWeather() {
-  const res = await fetch('/api/weather')
-  if (!res.ok) throw new Error('Failed to fetch weather')
-  return res.json()
-}
+const usePoll = createPollingHook('/api/weather', 10 * 60_000)
 
 export function useWeather() {
-  const { data } = usePolling(fetchWeather, 10 * 60_000)
+  const { data } = usePoll()
   return { weather: data ?? null }
 }

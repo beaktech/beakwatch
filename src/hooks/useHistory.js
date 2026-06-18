@@ -1,12 +1,8 @@
-import { usePolling } from './usePolling.js'
+import { createPollingHook } from './createPollingHook.js'
 
-async function fetchHistory() {
-  const res = await fetch('/api/history')
-  if (!res.ok) throw new Error('Failed to fetch history')
-  return res.json()
-}
+const usePoll = createPollingHook('/api/history', 5 * 60_000)
 
 export function useHistory() {
-  const { data } = usePolling(fetchHistory, 5 * 60_000)
+  const { data } = usePoll()
   return { history: data ?? null }
 }

@@ -38,6 +38,14 @@ function isRecentActivityStale(detections) {
   return Date.now() - latest > NO_ACTIVITY_WINDOW
 }
 
+function formatGap(ms) {
+  const mins = Math.round(ms / 60_000)
+  if (mins < 90) return `${mins} minute${mins === 1 ? '' : 's'}`
+  const hours = Math.round(mins / 60)
+  if (hours < 48) return `${hours} hours`
+  return `${Math.round(hours / 24)} days`
+}
+
 export default function HeroRotator({ detections, todayStats = [], history, lastSuccessAt }) {
   const [slideIndex, setSlideIndex] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -49,14 +57,19 @@ export default function HeroRotator({ detections, todayStats = [], history, last
     detections.length >= 2 &&
     detections[0].commonName === detections[1].commonName
 
-  const slides = useMemo(() => [
-    { key: 'last', hasData: detections.length > 0 && !recentStale && !isNetworkStale(lastSuccessAt) },
-    { key: 'profile', hasData: detections.length > 0 },
-    { key: 'today', hasData: todayStats.length > 0 },
-    { key: 'resting', hasData: todayStats.length === 0 },
-    { key: 'top30', hasData: (history?.top30Days?.length ?? 0) > 0 },
-    { key: 'rare', hasData: (history?.rareVisitors?.length ?? 0) > 0 },
-  ].filter(s => s.hasData).map(s => s.key), [detections, todayStats, history, lastSuccessAt, recentStale])
+  // Each slide carries a human title so we can name the ones currently waiting
+  // on data. Only slides with data join the rotation; the rest are surfaced in
+  // a small persistent notice rather than as a contradictory "resting" screen.
+  const catalog = useMemo(() => [
+    { key: 'last', title: 'Last Identified', available: detections.length > 0 && !recentStale && !isNetworkStale(lastSuccessAt) },
+    { key: 'profile', title: 'Species Profile', available: detections.length > 0 },
+    { key: 'today', title: 'Activity Patterns', available: todayStats.length > 0 },
+    { key: 'top30', title: 'Most Popular Species', available: (history?.top30Days?.length ?? 0) > 0 },
+    { key: 'rare', title: 'Rare Visitors', available: (history?.rareVisitors?.length ?? 0) > 0 },
+  ], [detections, todayStats, history, lastSuccessAt, recentStale])
+
+  const slides = useMemo(() => catalog.filter(s => s.available).map(s => s.key), [catalog])
+  const unavailable = useMemo(() => catalog.filter(s => !s.available).map(s => s.title), [catalog])
 
   const availableRef = useRef(slides)
   availableRef.current = slides
@@ -105,28 +118,54 @@ export default function HeroRotator({ detections, todayStats = [], history, last
     ? todayStats.filter(d => d.commonName === detections[0]?.commonName).reduce((sum, d) => sum + d.count, 0)
     : 0
 
+  // Explain why panels are missing: usually the feed has gone quiet, so lead
+  // with how long since the last detection; otherwise we're still building history.
+  const gapMs = detections[0] ? Date.now() - new Date(detections[0].timestamp).getTime() : null
+  const noticeText =
+    gapMs != null && gapMs > NO_ACTIVITY_WINDOW
+      ? `No new detections in the last ${formatGap(gapMs)} — some panels inactive`
+      : detections.length === 0
+        ? 'Waiting for detection data — some panels inactive'
+        : 'Building up history — some panels inactive'
+
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label="Advance to next slide"
-      className="h-full motion-safe:transition-opacity motion-safe:duration-500 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green"
-      style={{ opacity: visible ? 1 : 0 }}
-      onClick={handleActivate}
-      onKeyDown={handleKeyDown}
-    >
-      {currentSlide === 'last' && (
-        <LastIdentified
-          detection={detections[0]}
-          isSpotlight={isSpotlight}
-          todayCount={todayCount}
-        />
+    <div className="relative h-full">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Advance to next slide"
+        className="h-full motion-safe:transition-opacity motion-safe:duration-500 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green"
+        style={{ opacity: visible ? 1 : 0 }}
+        onClick={handleActivate}
+        onKeyDown={handleKeyDown}
+      >
+        {currentSlide === 'last' && (
+          <LastIdentified
+            detection={detections[0]}
+            isSpotlight={isSpotlight}
+            todayCount={todayCount}
+          />
+        )}
+        {currentSlide === 'profile' && <BirdProfile detection={detections[0]} todayStats={todayStats} />}
+        {currentSlide === 'today' && <DailyTopBirds todayStats={todayStats} />}
+        {currentSlide === 'top30' && <Top30Days species={history.top30Days} />}
+        {currentSlide === 'rare' && <RareVisitors species={history.rareVisitors} />}
+      </div>
+
+      {/* Persistent, non-fading notice when some panels have no data. Top-right
+          is clear of every slide's badges and headings. */}
+      {unavailable.length > 0 && (
+        <div
+          role="status"
+          className="pointer-events-none absolute top-4 right-4 z-30 flex items-center gap-1.5 rounded-full bg-black/45 backdrop-blur-sm px-3 py-1 text-[11px] font-medium text-white/75 whitespace-nowrap"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+          <span>{noticeText}</span>
+        </div>
       )}
-      {currentSlide === 'profile' && <BirdProfile detection={detections[0]} todayStats={todayStats} />}
-      {currentSlide === 'today' && <DailyTopBirds todayStats={todayStats} />}
-      {currentSlide === 'resting' && <NoActivity />}
-      {currentSlide === 'top30' && <Top30Days species={history.top30Days} />}
-      {currentSlide === 'rare' && <RareVisitors species={history.rareVisitors} />}
     </div>
   )
 }

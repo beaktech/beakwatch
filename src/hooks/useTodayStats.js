@@ -1,12 +1,8 @@
-import { usePolling } from './usePolling.js'
+import { createPollingHook } from './createPollingHook.js'
 
-async function fetchToday() {
-  const res = await fetch('/api/today')
-  if (!res.ok) throw new Error('Failed to fetch today stats')
-  return res.json()
-}
+const usePoll = createPollingHook('/api/today', 60_000)
 
 export function useTodayStats() {
-  const { data } = usePolling(fetchToday, 60_000)
+  const { data } = usePoll()
   return { todayStats: data ?? [] }
 }
