@@ -29,20 +29,40 @@ This may just be so you can have a nice display at home for your family. But wor
 
 ## Quick start
 
+**1. Clone and install**
+
 ```bash
-# 1. Clone and install repo:
 git clone https://github.com/beaktech/beakwatch
 cd beakwatch
 npm install
-# 2. Create new env from example, uncomment lines and add your details (at minimum set BIRDNET_GO_URL):
-cp .env.example server/.env
-nano server/.env
-# 3. run it!
-npm run build
-npm start
 ```
 
-Open `http://localhost:2325`.
+**2. Create your config**
+
+Copy the example file to `server/.env` (note the `server/` subfolder — that's where the app reads it from):
+
+```bash
+cp .env.example server/.env
+```
+
+Open `server/.env` in an editor and set **at least** `BIRDNET_GO_URL` to your BirdNET-Go instance, including the `http://` prefix and port:
+
+```ini
+BIRDNET_GO_URL=http://192.168.1.10:8080
+```
+
+Everything else is optional — see [Configuration](#configuration) below. (Running more than one BirdNET-Go? Use `BIRDNET_GO_URLS` instead.)
+
+**3. Build and run**
+
+```bash
+npm run build   # compile the frontend into dist/
+npm start       # serve the app + API
+```
+
+Then open **http://localhost:2325** in a browser.
+
+> **Just want to develop/tweak the UI?** Skip the build and run `npm run dev` instead — see [Development](#development).
 
 ## Configuration
 
@@ -84,7 +104,7 @@ cp .env.example server/.env
 npm run dev    # vite (5173, or next free port) + nodemon-watched express (2325)
 ```
 
-Vite proxies `/api` and `/birds/*.jpg` to Express. Open `http://localhost:5173`.
+Vite proxies `/api` and `/birds/*.jpg` to Express, so you don't need a separate build. Open the URL Vite prints on startup (usually `http://localhost:5173`).
 
 ### Scripts
 
